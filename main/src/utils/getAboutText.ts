@@ -1,4 +1,4 @@
-import { Group as OicqGroup } from '@icqqjs/icqq';
+import { OicqGroup } from '../types/qq-types';
 import { Friend, Group, GroupMemberInfo } from '../client/QQClient';
 import { NapCatGroup } from '../client/NapCatClient';
 
@@ -12,11 +12,7 @@ export default async function getAboutText(entity: Friend | Group, html: boolean
   else {
     let owner: GroupMemberInfo;
     let memberCount: number;
-    if (entity instanceof OicqGroup) {
-      owner = await entity.pickMember(entity.info.owner_id).renew();
-      memberCount = entity.info.member_count;
-    }
-    else if (entity instanceof NapCatGroup) {
+    if (entity instanceof NapCatGroup) {
       const membersInfo = await entity.getAllMemberInfo();
       owner = membersInfo.find(member => member.role === 'owner');
       memberCount = membersInfo.length;

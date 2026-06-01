@@ -1,7 +1,7 @@
 import { getLogger, Logger } from 'log4js';
 import Instance from '../models/Instance';
 import Telegram from '../client/Telegram';
-import { FriendRequestEvent, GroupInviteEvent } from '@icqqjs/icqq';
+import { FriendRequestEvent, GroupInviteEvent } from '../types/qq-types';
 import { getAvatar } from '../utils/urls';
 import { CustomFile } from 'telegram/client/uploads';
 import { Button } from 'telegram/tl/custom/button';

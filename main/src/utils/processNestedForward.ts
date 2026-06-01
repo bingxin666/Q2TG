@@ -4,6 +4,7 @@ import db from '../models/db';
 
 export default async (messages: ForwardMessage[], fromPairId: number) => {
   for (const message of messages) {
+    if (typeof message.message === 'string') continue;
     for (const elem of message.message) {
       if (elem.type !== 'json') continue;
       const parsed = forwardHelper.processJson(elem.data);

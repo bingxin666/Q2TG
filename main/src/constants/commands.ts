@@ -9,10 +9,6 @@ const preSetupCommands = [
 
 const commonPrivateCommands = [
   new Api.BotCommand({
-    command: 'login',
-    description: '当 QQ 处于下线状态时，使用此命令重新登录 QQ',
-  }),
-  new Api.BotCommand({
     command: 'flags',
     description: 'WARNING: EXPERIMENTAL FEATURES AHEAD!',
   }),

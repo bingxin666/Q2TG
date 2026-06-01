@@ -1,14 +1,11 @@
 import Instance from '../models/Instance';
 import Telegram from '../client/Telegram';
-import { MiraiElem } from '@icqqjs/icqq';
-import { MessageEvent, QQClient } from '../client/QQClient';
+import { QQClient } from '../client/QQClient';
 import { Api } from 'telegram';
-import lottie from '../constants/lottie';
 
 export default class {
   constructor(private readonly instance: Instance,
               private readonly tgBot: Telegram,
-              private readonly tgUser: Telegram,
               private readonly qqBot: QQClient) {
     this.initStickerPack();
     tgBot.addNewMessageEventHandler(this.onTelegramMessage);

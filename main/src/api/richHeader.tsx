@@ -1,11 +1,10 @@
 import { Pair } from '../models/Pair';
-import { Member as OicqMember } from '@icqqjs/icqq';
 import { format } from 'date-fns';
 import { Group, GroupMemberInfo } from '../client/QQClient';
 import { NapCatFriend, NapCatGroupMember } from '../client/NapCatClient';
 import { Elysia } from 'elysia';
 import { html, Html } from '@elysiajs/html';
-import { UserProfile } from '@icqqjs/icqq/lib/common';
+import { UserProfile } from '../types/qq-types';
 import { getLogger } from 'log4js';
 import posthog from '../models/posthog';
 
@@ -25,11 +24,7 @@ export default new Elysia()
         return 'Member not found';
       }
       let profile: UserProfile, memberInfo: GroupMemberInfo;
-      if (member instanceof OicqMember) {
-        memberInfo = member.info;
-        profile = await member.client.getProfile(member.uin);
-      }
-      else if (member instanceof NapCatGroupMember) {
+      if (member instanceof NapCatGroupMember) {
         memberInfo = await member.renew();
         const user = await member.client.pickFriend(member.uin) as NapCatFriend;
         const info = await user.renew();

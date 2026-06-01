@@ -4,8 +4,6 @@ import db from './models/db';
 import api from './api';
 import env from './models/env';
 import posthog from './models/posthog';
-import OicqClient from './client/OicqClient';
-
 (async () => {
   configure({
     appenders: {
@@ -44,7 +42,6 @@ import OicqClient from './client/OicqClient';
 
   setTimeout(async () => {
     for (const instance of Instance.instances.filter(it => it.workMode === 'group')) {
-      if (!(instance.oicq instanceof OicqClient)) continue;
       try {
         await instance.forwardPairs.initMapInstance(Instance.instances.filter(it => it.workMode === 'personal'));
       }

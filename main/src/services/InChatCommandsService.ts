@@ -8,8 +8,7 @@ import { CustomFile } from 'telegram/client/uploads';
 import { getAvatar } from '../utils/urls';
 import db from '../models/db';
 import { format } from 'date-fns';
-import { QQClient, Group, GroupMemberInfo } from '../client/QQClient';
-import { Member as OicqMember, Group as OicqGroup, Friend as OicqFriend } from '@icqqjs/icqq';
+import { QQClient, Group } from '../client/QQClient';
 import posthog from '../models/posthog';
 
 export default class InChatCommandsService {
@@ -42,10 +41,7 @@ export default class InChatCommandsService {
         }
         else {
           const sender = pair.qq.pickMember(Number(messageInfo.qqSenderId));
-          let memberInfo: GroupMemberInfo;
-          if (sender instanceof OicqMember) {
-            memberInfo = await sender.renew();
-          }
+          const memberInfo = await sender.renew();
 
           textToSend += `<b>发送者：</b>${memberInfo.title ? `「<i>${memberInfo.title}</i>」` : ''}` +
             `${memberInfo.card || memberInfo.nickname}(<code>${sender.uin}</code>)\n`;
@@ -96,7 +92,7 @@ export default class InChatCommandsService {
       });
       return;
     }
-    const qq = pair.qq as OicqFriend | OicqGroup;
+    const qq = pair.qq as any;
     try {
       let target: number;
       if (message.replyToMsgId) {

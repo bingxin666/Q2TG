@@ -14,7 +14,6 @@ import { Api } from 'telegram';
 import commands from '../constants/commands';
 import TelegramChat from '../client/TelegramChat';
 import RequestController from '../controllers/RequestController';
-import OicqErrorNotifyController from '../controllers/OicqErrorNotifyController';
 import { MarkupLike } from 'telegram/define';
 import { Button } from 'telegram/tl/custom/button';
 import { QqBot } from '@prisma/client';
@@ -37,14 +36,12 @@ export default class Instance {
   private _isSetup = false;
   private _workMode = '';
   private _botSessionId = 0;
-  private _userSessionId = 0;
   private _qq: QqBot;
   private _flags: number;
 
   private readonly log: Logger;
 
   public tgBot: Telegram;
-  public tgUser: Telegram;
   public oicq: QQClient;
   public isInit = false;
 
@@ -53,7 +50,6 @@ export default class Instance {
   public forwardPairs: ForwardPairs;
   private setupController: SetupController;
   private instanceManageController: InstanceManageController;
-  private oicqErrorNotifyController: OicqErrorNotifyController;
   private requestController: RequestController;
   private configController: ConfigController;
   private deleteMessageController: DeleteMessageController;
@@ -93,7 +89,6 @@ export default class Instance {
     this._owner = Number(dbEntry.owner);
     this._qq = dbEntry.qqBot;
     this._botSessionId = dbEntry.botSessionId;
-    this._userSessionId = dbEntry.userSessionId;
     this._isSetup = dbEntry.isSetup;
     this._workMode = dbEntry.workMode;
     this._flags = dbEntry.flags;
@@ -120,39 +115,22 @@ export default class Instance {
         this.log.info('当前服务器未配置，请向 Bot 发送 /setup 来设置');
         this.setupController = new SetupController(this, this.tgBot);
         // 这会一直卡在这里，所以要新开一个异步来做，提前返回掉上面的
-        ({ tgUser: this.tgUser, oicq: this.oicq } = await this.setupController.waitForFinish());
+        ({ oicq: this.oicq } = await this.setupController.waitForFinish());
         this._ownerChat = await this.tgBot.getChat(this.owner);
       }
       else {
-        this.log.debug('正在登录 TG UserBot');
-        this.tgUser = await Telegram.connect(this._userSessionId);
-        this.log.info('TG UserBot 登录完成');
         this._ownerChat = await this.tgBot.getChat(this.owner);
-        this.log.debug('正在登录 OICQ');
+        this.log.debug('正在连接 NapCat');
         this.oicq = await QQClient.create({
-          type: this.qq.type,
+          type: 'napcat',
           id: this.qq.id,
-          uin: Number(this.qq.uin),
-          password: this.qq.password,
-          platform: this.qq.platform,
-          signApi: this.qq.signApi,
-          signVer: this.qq.signVer,
-          signDockerId: this.qq.signDockerId,
-          onVerifyDevice: async (phone) => {
-            return await this.waitForOwnerInput(`请输入手机 ${phone} 收到的验证码`);
-          },
-          onVerifySlider: async (url) => {
-            return await this.waitForOwnerInput(`收到滑块验证码 <code>${url}</code>\n` +
-              '请使用<a href="https://github.com/mzdluo123/TxCaptchaHelper/releases">此软件</a>验证并输入 Ticket',
-            );
-          },
           wsUrl: this.qq.wsUrl,
         });
-        this.log.info('OICQ 登录完成');
+        this.log.info('NapCat 连接完成');
       }
-      this.aliveCheckController = new AliveCheckController(this, this.tgBot, this.tgUser, this.oicq);
-      this.loadingController = new LoadingController(this, this.tgBot, this.tgUser, this.oicq);
-      this.forwardPairs = await ForwardPairs.load(this.id, this.oicq, this.tgBot, this.tgUser);
+      this.aliveCheckController = new AliveCheckController(this, this.tgBot, this.oicq);
+      this.loadingController = new LoadingController(this, this.tgBot, this.oicq);
+      this.forwardPairs = await ForwardPairs.load(this.id, this.oicq, this.tgBot);
       this.setupCommands()
         .then(() => this.log.info('命令设置成功'))
         .catch(e => {
@@ -162,20 +140,19 @@ export default class Instance {
       if (this.id === 0) {
         this.instanceManageController = new InstanceManageController(this, this.tgBot);
       }
-      this.oicqErrorNotifyController = new OicqErrorNotifyController(this, this.oicq);
       this.requestController = new RequestController(this, this.tgBot, this.oicq);
-      this.configController = new ConfigController(this, this.tgBot, this.tgUser, this.oicq);
-      this.deleteMessageController = new DeleteMessageController(this, this.tgBot, this.tgUser, this.oicq);
-      this.miraiSkipFilterController = new MiraiSkipFilterController(this, this.tgBot, this.tgUser, this.oicq);
-      this.inChatCommandsController = new InChatCommandsController(this, this.tgBot, this.tgUser, this.oicq);
+      this.configController = new ConfigController(this, this.tgBot, this.oicq);
+      this.deleteMessageController = new DeleteMessageController(this, this.tgBot, this.oicq);
+      this.miraiSkipFilterController = new MiraiSkipFilterController(this, this.tgBot, this.oicq);
+      this.inChatCommandsController = new InChatCommandsController(this, this.tgBot, this.oicq);
       this.quotLyController = new QuotLyController(this, this.tgBot, this.oicq);
-      this.typingController = new TypingController(this, this.tgBot, this.tgUser, this.oicq);
-      this.forwardController = new ForwardController(this, this.tgBot, this.tgUser, this.oicq);
+      this.typingController = new TypingController(this, this.tgBot, this.oicq);
+      this.forwardController = new ForwardController(this, this.tgBot, this.oicq);
       if (this.workMode === 'group') {
         this.hugController = new HugController(this, this.tgBot, this.oicq);
       }
       else {
-        this.groupNameRefreshController = new GroupNameRefreshController(this, this.tgBot, this.tgUser, this.oicq);
+        this.groupNameRefreshController = new GroupNameRefreshController(this, this.tgBot, this.oicq);
       }
       this.fileAndFlashPhotoController = new FileAndFlashPhotoController(this, this.tgBot, this.oicq);
       this.isInit = true;
@@ -262,20 +239,12 @@ export default class Instance {
     return this.tgBot.me;
   }
 
-  get userMe() {
-    return this.tgUser.me;
-  }
-
   get ownerChat() {
     return this._ownerChat;
   }
 
   get botSessionId() {
     return this._botSessionId;
-  }
-
-  get userSessionId() {
-    return this._userSessionId;
   }
 
   get flags() {
@@ -313,15 +282,6 @@ export default class Instance {
     this._botSessionId = sessionId;
     db.instance.update({
       data: { botSessionId: sessionId },
-      where: { id: this.id },
-    })
-      .then(() => this.log.trace(sessionId));
-  }
-
-  set userSessionId(sessionId: number) {
-    this._userSessionId = sessionId;
-    db.instance.update({
-      data: { userSessionId: sessionId },
       where: { id: this.id },
     })
       .then(() => this.log.trace(sessionId));

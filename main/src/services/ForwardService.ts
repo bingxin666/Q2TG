@@ -1,13 +1,10 @@
 import Telegram from '../client/Telegram';
 import {
   FaceElem,
-  Group as OicqGroup,
-  Friend as OicqFriend,
   PttElem,
   Quotable,
   segment,
-} from '@icqqjs/icqq';
-import { Contactable } from '@icqqjs/icqq/lib/internal';
+} from '../types/qq-types';
 import { fetchFile, getBigFaceUrl, getImageUrlByMd5, isContainsUrl } from '../utils/urls';
 import { ButtonLike, FileLike } from 'telegram/define';
 import { getLogger, Logger } from 'log4js';
@@ -24,14 +21,11 @@ import axios from 'axios';
 import { md5Hex } from '../utils/hashing';
 import Instance from '../models/Instance';
 import { Pair } from '../models/Pair';
-import OicqClient from '../client/OicqClient';
 import lottie from '../constants/lottie';
 import _ from 'lodash';
 import emoji from '../constants/emoji';
 import convert from '../helpers/convert';
 import { QQMessageSent } from '../types/definitions';
-import Docker from 'dockerode';
-import ReplyKeyboardHide = Api.ReplyKeyboardHide;
 import env from '../models/env';
 import { CustomFile } from 'telegram/client/uploads';
 import flags from '../constants/flags';
@@ -47,7 +41,7 @@ import qfaceChannelMap from '../constants/qfaceChannelMap';
 import { FaceElemEx } from '../client/NapCatClient/convert';
 import nameColor from '../constants/nameColor';
 import memberRoleCache from '../helpers/memberRoleCache';
-import { GroupRole } from '@icqqjs/icqq/lib/common';
+import { GroupRole } from '../types/qq-types';
 import path from 'path';
 import { fileTypeFromBuffer, fileTypeFromFile, FileTypeResult } from 'file-type';
 
@@ -67,30 +61,11 @@ type CrhPlayerInfo = {
 // noinspection FallThroughInSwitchStatementJS
 export default class ForwardService {
   private readonly log: Logger;
-  private readonly restartSignCallbackHandle?: Buffer;
 
   constructor(private readonly instance: Instance,
               private readonly tgBot: Telegram,
               private readonly oicq: QQClient) {
     this.log = getLogger(`ForwardService - ${instance.id}`);
-    if (oicq instanceof OicqClient && oicq.signDockerId) {
-      const socket = new Docker({ socketPath: '/var/run/docker.sock' });
-      const container = socket.getContainer(oicq.signDockerId);
-      this.restartSignCallbackHandle = tgBot.registerCallback(async (event) => {
-        const message = await event.edit({
-          message: event.messageId,
-          text: '正在重启签名服务...',
-          buttons: new ReplyKeyboardHide({}),
-        });
-        await container.restart();
-        await event.answer({
-          message: '已发送重启指令',
-        });
-        await message.reply({
-          message: '已发送重启指令\n你需要稍后重新发送一下消息',
-        });
-      });
-    }
     this.initStickerPack()
       .then(() => this.log.info('Sticker Pack 初始化完成'))
       .catch(e => {
@@ -453,13 +428,6 @@ export default class ForwardService {
           }
           case 'record': {
             url = elem.url;
-            if (!url && pair.qq instanceof Contactable && elem.md5 === 'ntptt') {
-              url = await pair.qq.getPttUrl(elem);
-            }
-            else if (!url && this.oicq instanceof OicqClient) {
-              const refetchMessage = await this.oicq.oicq.getMsg(event.messageId);
-              url = (refetchMessage.message.find(it => it.type === 'record') as PttElem).url;
-            }
             if (url) {
               let bufSilk: Buffer;
               if (this.oicq instanceof NapCatClient) {
@@ -589,9 +557,7 @@ export default class ForwardService {
       }
 
       if (this.instance.workMode === 'personal' && !event.dm && event.atMe && !replyTo) {
-        message += `\n<b>@${this.instance.userMe.usernames?.length ?
-          this.instance.userMe.usernames[0].username :
-          this.instance.userMe.username}</b>`;
+        message += `\n<b>@${this.tgBot.me.username}</b>`;
       }
 
       let richHeaderUsed = false;
@@ -668,20 +634,7 @@ export default class ForwardService {
       }
 
       if (richHeaderUsed) {
-        // 测试 Web Preview 内容是否被正确获取
-        setTimeout(async () => {
-          // Telegram Bot 账号无法获取 Web 预览内容，只能用 User 账号获取
-          const userMessage = await pair.tgUser.getMessage({
-            ids: tgMessage.id,
-          });
-          if (['WebPage', 'WebPageNotModified'].includes((userMessage?.media as Api.MessageMediaWebPage)?.webpage?.className))
-            return;
-          // 没有正常获取的话，就加上原先的头部
-          this.log.warn('Rich Header 回测错误', messageToSend.file);
-          await tgMessage.edit({
-            text: messageHeaderWithLink + (message && messageHeaderWithLink ? '\n' : '') + message,
-          });
-        }, 3000);
+        // Web preview verification removed (no UserBot available)
       }
 
       if (this.instance.workMode === 'personal' && !event.dm && event.atAll) {
@@ -832,13 +785,7 @@ export default class ForwardService {
         const temp = await createTempFile();
         tempFiles.push(temp);
         await message.downloadMedia({ outputFile: temp.path });
-        if (this.oicq instanceof OicqClient) {
-          const bufSilk = await silk.encode(temp.path);
-          chain.push(segment.record(bufSilk));
-        }
-        else if (this.oicq instanceof NapCatClient) {
-          chain.push(segment.record(temp.path));
-        }
+        chain.push(segment.record(temp.path));
         brief += '[语音]';
       }
       else if (message.poll) {
@@ -858,23 +805,13 @@ export default class ForwardService {
       else if (message.venue && message.venue.geo instanceof Api.GeoPoint) {
         // 地标
         const geo: { lat: number, lng: number } = eviltransform.wgs2gcj(message.venue.geo.lat, message.venue.geo.long);
-        if (this.oicq instanceof OicqGroup || this.oicq instanceof OicqFriend) {
-          chain.push(segment.location(geo.lat, geo.lng, `${message.venue.title} (${message.venue.address})`) as any);
-        }
-        else {
-          chain.push(`[位置：${message.venue.title} (${message.venue.address})]`);
-        }
+        chain.push(`[位置：${message.venue.title} (${message.venue.address})]`);
         brief += `[位置：${message.venue.title}]`;
       }
       else if (message.geo instanceof Api.GeoPoint) {
         // 普通的位置，没有名字
         const geo: { lat: number, lng: number } = eviltransform.wgs2gcj(message.geo.lat, message.geo.long);
-        if (this.oicq instanceof OicqGroup || this.oicq instanceof OicqFriend) {
-          chain.push(segment.location(geo.lat, geo.lng, '选中的位置') as any);
-        }
-        else {
-          chain.push(`[位置：${geo.lat} ${geo.lng}]\nhttps://uri.amap.com/marker?position=${geo.lng},${geo.lat}`);
-        }
+        chain.push(`[位置：${geo.lat} ${geo.lng}]\nhttps://uri.amap.com/marker?position=${geo.lng},${geo.lat}`);
         brief += '[位置]';
       }
       else if (message.media instanceof Api.MessageMediaDocument && message.media.document instanceof Api.Document) {
@@ -1025,7 +962,7 @@ export default class ForwardService {
           tempFiles.forEach(it => it.cleanup());
           return [{
             ...messageSent,
-            senderId: pair.instanceMapForTg[senderId] instanceof OicqGroup ? pair.instanceMapForTg[senderId].client.uin : 0,//TODO
+            senderId: 0,//OicqGroup removed
             brief,
           }];
         }
@@ -1081,15 +1018,6 @@ export default class ForwardService {
       }
       const qqMessages = [] as Array<QQMessageSent>;
       if (chainableElements.length) {
-        if (this.oicq instanceof OicqGroup || this.oicq instanceof OicqFriend) {
-          chainableElements.push({
-            type: 'mirai',
-            data: JSON.stringify({
-              id: senderId,
-              eqq: { type: 'tg', tgUid: senderId, noSplitSender: this.instance.workMode === 'personal', version: 2 },
-            }, undefined, 0),
-          } as any);
-        }
         let messageToSend: Sendable = chainableElements;
         qqMessages.push({
           ...await pair.qq.sendMsg(messageToSend, source),
@@ -1115,9 +1043,6 @@ export default class ForwardService {
       try {
         await message.reply({
           message: `<i>转发失败：${e.message}</i>`,
-          buttons: (e.message === '签名api异常' && this.restartSignCallbackHandle) ?
-            Button.inline('重启签名服务', this.restartSignCallbackHandle) :
-            undefined,
         });
       }
       catch {

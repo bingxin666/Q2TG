@@ -29,7 +29,6 @@ export default class ForwardController {
   constructor(
     private readonly instance: Instance,
     private readonly tgBot: Telegram,
-    private readonly tgUser: Telegram,
     private readonly oicq: QQClient,
   ) {
     this.log = getLogger(`ForwardController - ${instance.id}`);
@@ -38,7 +37,6 @@ export default class ForwardController {
     oicq.addGroupMemberIncreaseEventHandler(this.onQqGroupMemberIncrease);
     oicq.addPokeEventHandler(this.onQqPoke);
     tgBot.addNewMessageEventHandler(this.onTelegramMessage);
-    tgUser.addNewMessageEventHandler(this.onTelegramUserMessage);
     tgBot.addEditedMessageEventHandler(this.onTelegramMessage);
     instance.workMode === 'group' && tgBot.addChannelParticipantEventHandler(this.onTelegramParticipant);
   }
@@ -96,15 +94,6 @@ export default class ForwardController {
       this.log.error('处理 QQ 消息时遇到问题', e);
       posthog.capture('处理 QQ 消息时遇到问题', { error: e });
     }
-  };
-
-  private onTelegramUserMessage = async (message: Api.Message) => {
-    if (!message.sender) return;
-    if (!('bot' in message.sender) || !message.sender.bot) return;
-    const pair = this.instance.forwardPairs.find(message.chat);
-    if (!pair) return;
-    if ((pair.flags | this.instance.flags) & flags.DISABLE_FORWARD_OTHER_BOT) return;
-    await this.onTelegramMessage(message, pair);
   };
 
   private onTelegramMessage = async (message: Api.Message, pair = this.instance.forwardPairs.find(message.chat)) => {

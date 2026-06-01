@@ -7,7 +7,6 @@ import { BigInteger } from 'big-integer';
 import { Pair } from './Pair';
 import { getLogger, Logger } from 'log4js';
 import Instance from './Instance';
-import OicqClient from '../client/OicqClient';
 
 export default class ForwardPairs {
   private pairs: Pair[] = [];
@@ -18,7 +17,7 @@ export default class ForwardPairs {
   }
 
   // 在 forwardController 创建时初始化
-  private async init(oicq: QQClient, tgBot: Telegram, tgUser: Telegram) {
+  private async init(oicq: QQClient, tgBot: Telegram) {
     const dbValues = await db.forwardPair.findMany({
       where: { instanceId: this.instanceId },
     });
@@ -26,10 +25,9 @@ export default class ForwardPairs {
       try {
         const qq = await oicq.getChat(Number(i.qqRoomId), i.qqFromGroupId ? Number(i.qqFromGroupId) : undefined);
         const tg = await tgBot.getChat(Number(i.tgChatId));
-        const tgUserChat = await tgUser.getChat(Number(i.tgChatId));
-        if (qq && tg && tgUserChat) {
-          this.log.debug('初始化', { qq, tg, tgUserChat });
-          this.pairs.push(new Pair(qq, tg, tgUserChat, i.id, i.flags, i.apiKey, oicq));
+        if (qq && tg) {
+          this.log.debug('初始化', { qq, tg });
+          this.pairs.push(new Pair(qq, tg, i.id, i.flags, i.apiKey, oicq));
         }
       }
       catch (e) {
@@ -38,13 +36,13 @@ export default class ForwardPairs {
     }
   }
 
-  public static async load(instanceId: number, oicq: QQClient, tgBot: Telegram, tgUser: Telegram) {
+  public static async load(instanceId: number, oicq: QQClient, tgBot: Telegram) {
     const instance = new this(instanceId);
-    await instance.init(oicq, tgBot, tgUser);
+    await instance.init(oicq, tgBot);
     return instance;
   }
 
-  public async add(qq: Friend | Group, tg: TelegramChat, tgUser: TelegramChat, qqClient: QQClient, qqFromGroupId?: number) {
+  public async add(qq: Friend | Group, tg: TelegramChat, qqClient: QQClient, qqFromGroupId?: number) {
     const dbEntry = await db.forwardPair.create({
       data: {
         qqRoomId: 'uin' in qq ? qq.uin : -qq.gid,
@@ -53,7 +51,7 @@ export default class ForwardPairs {
         qqFromGroupId,
       },
     });
-    this.pairs.push(new Pair(qq, tg, tgUser, dbEntry.id, dbEntry.flags, dbEntry.apiKey, qqClient));
+    this.pairs.push(new Pair(qq, tg, dbEntry.id, dbEntry.flags, dbEntry.apiKey, qqClient));
     return dbEntry;
   }
 
@@ -81,21 +79,7 @@ export default class ForwardPairs {
   }
 
   public async initMapInstance(instances: Instance[]) {
-    for (const forwardPair of this.pairs) {
-      for (const instance of instances) {
-        if (!(instance.oicq instanceof OicqClient)) continue;
-        const instanceTgUserId = instance.userMe.id.toString();
-        if (forwardPair.instanceMapForTg[instanceTgUserId]) continue;
-        try {
-          const group = await instance.oicq.getChat(forwardPair.qqRoomId) as Group;
-          if (!group) continue;
-          forwardPair.instanceMapForTg[instanceTgUserId] = group;
-          this.log.info('MapInstance', { group: forwardPair.qqRoomId, tg: instanceTgUserId, qq: instance.qqUin });
-        }
-        catch {
-        }
-      }
-    }
+    // MapInstance requires UserBot which has been removed
   }
 
   public getAll() {

@@ -7,7 +7,6 @@ import { Api } from 'telegram';
 export default class TypingController {
   constructor(private readonly instance: Instance,
               private readonly tgBot: Telegram,
-              private readonly tgUser: Telegram,
               private readonly oicq: QQClient) {
     oicq.addInputStatusChangeHandler(this.handleInputStatusChange);
     // bot 无法获取输入状态，个人账号无法获取自己在其他设备的输入状态，做不了

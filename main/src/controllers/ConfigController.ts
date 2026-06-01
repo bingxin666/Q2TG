@@ -14,7 +14,6 @@ import {
   QQClient,
 } from '../client/QQClient';
 import { MessageEvent } from '../client/QQClient';
-import OicqClient from '../client/OicqClient';
 
 export default class ConfigController {
   private readonly configService: ConfigService;
@@ -23,10 +22,9 @@ export default class ConfigController {
 
   constructor(private readonly instance: Instance,
               private readonly tgBot: Telegram,
-              private readonly tgUser: Telegram,
               private readonly oicq: QQClient) {
     this.log = getLogger(`ConfigController - ${instance.id}`);
-    this.configService = new ConfigService(this.instance, tgBot, tgUser, oicq);
+    this.configService = new ConfigService(this.instance, tgBot, oicq);
     tgBot.addNewMessageEventHandler(this.handleMessage);
     tgBot.addNewServiceMessageEventHandler(this.handleServiceMessage);
     tgBot.addChannelParticipantEventHandler(this.handleChannelParticipant);
@@ -34,7 +32,6 @@ export default class ConfigController {
     oicq.addGroupMemberDecreaseEventHandler(this.handleGroupDecrease);
     this.instance.workMode === 'personal' && oicq.addGroupMemberIncreaseEventHandler(this.handleMemberIncrease);
     this.instance.workMode === 'personal' && oicq.addFriendIncreaseEventHandler(this.handleFriendIncrease);
-    this.instance.workMode === 'personal' && this.configService.setupFilter();
   }
 
   private handleMessage = async (message: Api.Message) => {
@@ -68,13 +65,8 @@ export default class ConfigController {
           case '/addgroup':
             await this.configService.addGroup();
             return true;
-          case '/migrate':
-            await this.configService.migrateAllChats();
-            return true;
           case '/login':
-            if (this.oicq instanceof OicqClient) {
-              await this.oicq.oicq.login();
-            }
+            // OicqClient login removed - no longer needed
             return true;
           case '/refresh_all':
             await this.configService.refreshAll();
@@ -108,16 +100,10 @@ export default class ConfigController {
       // 会自动写入数据库
       pair.tg = await this.tgBot.getChat(message.action.channelId);
       // 升级之后 bot 的管理权限可能没了，需要修复一下
-      if (this.instance.workMode === 'personal') {
-        const chatForUser = await this.tgUser.getChat(message.action.channelId);
-        await chatForUser.setAdmin(this.tgBot.me.username);
-      }
-      else {
-        await pair.tg.sendMessage({
-          message: '本群已升级为超级群，可能需要重新设置一下管理员权限',
-          silent: true,
-        });
-      }
+      await pair.tg.sendMessage({
+        message: '本群已升级为超级群，可能需要重新设置一下管理员权限',
+        silent: true,
+      });
     }
   };
 

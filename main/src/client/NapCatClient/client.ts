@@ -6,7 +6,7 @@ import type { Receive, WSReceiveHandler, WSSendParam, WSSendReturn } from 'node-
 import { NapCatFriend, NapCatGroup } from './entity';
 import { napCatReceiveToMessageElem } from './convert';
 import { NapCatFriendRequestEvent, NapCatGroupEvent, NapCatGroupInviteEvent } from './event';
-import type { ImageElem } from '@icqqjs/icqq';
+import type { ImageElem } from '../../types/qq-types';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
 export interface CreateNapCatParams extends CreateQQClientParamsBase {

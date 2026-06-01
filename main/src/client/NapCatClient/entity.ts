@@ -1,4 +1,4 @@
-import { MessageRet, Quotable } from '@icqqjs/icqq';
+import { MessageRet, Quotable } from '../../types/qq-types';
 import { Friend, Group, GroupFs, GroupMember, QQEntity, QQUser, Sendable, SendableElem } from '../QQClient';
 import { NapCatClient } from './client';
 import { messageElemToNapCatSendable, napCatForwardMultiple, napCatReceiveToMessageElem } from './convert';

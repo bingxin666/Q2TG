@@ -1,14 +1,11 @@
 import Telegram from '../client/Telegram';
 import { getLogger, Logger } from 'log4js';
 import { BigInteger } from 'big-integer';
-import { Platform } from '@icqqjs/icqq';
 import { MarkupLike } from 'telegram/define';
 import { Button } from 'telegram/tl/custom/button';
 import { WorkMode } from '../types/definitions';
 import TelegramChat from '../client/TelegramChat';
 import Instance from '../models/Instance';
-import db from '../models/db';
-import { QQClient } from '../client/QQClient';
 
 export default class SetupService {
   private owner: TelegramChat;
@@ -79,22 +76,6 @@ export default class SetupService {
         return await this.owner.inlineDigitInput();
       },
       onError: (err) => this.log.error(err),
-    });
-  }
-
-  public async createOicq(uin: number, password: string, platform: Platform, signApi: string, signVer: string) {
-    const dbQQBot = await db.qqBot.create({ data: { uin, password, platform, signApi, signVer } });
-    return await QQClient.create({
-      type: 'oicq',
-      id: dbQQBot.id,
-      uin, password, platform, signApi, signVer,
-      onVerifyDevice: async (phone) => {
-        return await this.waitForOwnerInput(`请输入手机 ${phone} 收到的验证码`);
-      },
-      onVerifySlider: async (url) => {
-        return await this.waitForOwnerInput(`收到滑块验证码 <code>${url}</code>\n` +
-          '请使用<a href="https://github.com/mzdluo123/TxCaptchaHelper/releases">此软件</a>验证并输入 Ticket');
-      },
     });
   }
 

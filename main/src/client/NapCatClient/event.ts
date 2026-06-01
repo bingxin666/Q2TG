@@ -1,9 +1,9 @@
-import { FriendRequestEvent, Gender, GroupInviteEvent, GroupRequestEvent, RequestEvent } from '@icqqjs/icqq';
+import { FriendRequestEvent, Gender, GroupInviteEvent, GroupRequestEvent, RequestEvent } from '../../types/qq-types';
 import { NapCatClient } from './client';
 import { getLogger, Logger } from 'log4js';
 import posthog from '../../models/posthog';
 import { WSReceiveHandler, WSSendReturn } from 'node-napcat-ts';
-import { GroupRole } from '@icqqjs/icqq/lib/common';
+import { GroupRole } from '../../types/qq-types';
 
 export abstract class NapCatRequestEvent implements RequestEvent {
   readonly post_type: 'request' = 'request';

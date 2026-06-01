@@ -1,4 +1,4 @@
-import { GroupRole } from '@icqqjs/icqq/lib/common';
+import { GroupRole } from '../types/qq-types';
 import { createCanvas, loadImage, CanvasRenderingContext2D } from 'canvas';
 import * as fs from 'fs';
 

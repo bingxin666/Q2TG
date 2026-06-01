@@ -6,7 +6,6 @@ const configParsed = z.object({
   CACHE_DIR: z.string().default(path.join(process.env.DATA_DIR || path.resolve('./data'), 'cache')),
 
   LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'mark', 'off']).default('info'),
-  OICQ_LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'mark', 'off']).default('warn'),
   TG_LOG_LEVEL: z.enum(['none', 'error', 'warn', 'info', 'debug']).default('warn'),
 
   FFMPEG_PATH: z.string().optional(),
@@ -14,9 +13,6 @@ const configParsed = z.object({
 
   // 只会在实例 0 自动使用
   NAPCAT_WS_URL: z.string().url().optional(),
-
-  SIGN_API: z.string().url().optional(),
-  SIGN_VER: z.string().optional(),
 
   TG_API_ID: z.string().regex(/^\d+$/).transform(Number),
   TG_API_HASH: z.string(),

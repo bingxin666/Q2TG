@@ -1,5 +1,5 @@
 import { Friend, Group, QQUser, Sendable } from './index';
-import type { MessageElem } from '@icqqjs/icqq';
+import type { MessageElem } from '../../types/qq-types';
 import { FaceElemEx, NapCatForwardElem } from '../NapCatClient/convert';
 
 export abstract class ChatEvent {

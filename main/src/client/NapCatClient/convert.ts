@@ -1,12 +1,12 @@
 import type { Receive, Send, WSSendReturn } from 'node-napcat-ts';
 import { ForwardMessage, SendableElem } from '../QQClient';
-import { ImageElem, MessageElem } from '@icqqjs/icqq';
+import { ImageElem, MessageElem } from '../../types/qq-types';
 import { file as createTempFileBase, FileResult } from 'tmp-promise';
 import fsP from 'fs/promises';
 import env from '../../models/env';
 import fs from 'fs';
 import { Readable } from 'node:stream';
-import { FaceElem } from '@icqqjs/icqq/lib/message/elements';
+import { FaceElem } from '../../types/qq-types';
 
 const createTempFile = (options: Parameters<typeof createTempFileBase>[0] = {}) => createTempFileBase({
   tmpdir: env.CACHE_DIR,
@@ -105,6 +105,9 @@ export type NapCatForwardElem = {
 export type FaceElemEx = FaceElem & {
   resultId?: string,
   chainCount?: number,
+  stickerType?: string | number,
+  text?: string,
+  id: number,
 }
 
 export type ImageElemEx = ImageElem & {

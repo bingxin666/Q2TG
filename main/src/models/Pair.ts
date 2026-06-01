@@ -30,7 +30,6 @@ export class Pair {
   constructor(
     public readonly qq: Friend | Group,
     private _tg: TelegramChat,
-    public readonly tgUser: TelegramChat,
     public dbId: number,
     private _flags: number,
     public readonly apiKey: string,

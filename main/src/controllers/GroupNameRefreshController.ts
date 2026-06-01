@@ -12,7 +12,6 @@ export default class GroupNameRefreshController {
 
   constructor(private readonly instance: Instance,
               private readonly tgBot: Telegram,
-              private readonly tgUser: Telegram,
               private readonly oicq: QQClient) {
     oicq.addGroupNameChangeHandler(this.handleGroupNameChange.bind(this));
     this.log = getLogger(`GroupNameRefreshController - ${instance.id}`);

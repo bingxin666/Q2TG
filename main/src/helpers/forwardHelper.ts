@@ -12,7 +12,7 @@ import posthog from '../models/posthog';
 import fs from 'fs';
 import { format } from 'date-fns';
 import { fileTypeFromBuffer, fileTypeFromFile, FileTypeResult } from 'file-type';
-import { GroupRole } from '@icqqjs/icqq/lib/common';
+import { GroupRole } from '../types/qq-types';
 import { createCanvas, loadImage } from 'canvas';
 import path from 'path';
 import makeHeaderImage from './makeHeaderImage';

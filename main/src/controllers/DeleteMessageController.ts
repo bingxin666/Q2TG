@@ -1,7 +1,6 @@
 import DeleteMessageService from '../services/DeleteMessageService';
 import Telegram from '../client/Telegram';
 import { Api } from 'telegram';
-import { DeletedMessageEvent } from 'telegram/events/DeletedMessage';
 import Instance from '../models/Instance';
 import { MessageRecallEvent, QQClient } from '../client/QQClient';
 
@@ -10,12 +9,10 @@ export default class DeleteMessageController {
 
   constructor(private readonly instance: Instance,
               private readonly tgBot: Telegram,
-              private readonly tgUser: Telegram,
               private readonly oicq: QQClient) {
     this.deleteMessageService = new DeleteMessageService(this.instance, tgBot);
     tgBot.addNewMessageEventHandler(this.onTelegramMessage);
     tgBot.addEditedMessageEventHandler(this.onTelegramEditMessage);
-    tgUser.addDeletedMessageEventHandler(this.onTgDeletedMessage);
     oicq.addMessageRecallEventHandler(this.onQqRecall);
   }
 
@@ -44,16 +41,5 @@ export default class DeleteMessageController {
     const pair = this.instance.forwardPairs.find(event.chat);
     if (!pair) return;
     await this.deleteMessageService.handleQqRecall(event, pair);
-  };
-
-  private onTgDeletedMessage = async (event: DeletedMessageEvent) => {
-    if (!(event.peer instanceof Api.PeerChannel)) return;
-    // group anonymous bot
-    if (event._entities?.get('1087968824')) return;
-    const pair = this.instance.forwardPairs.find(event.peer.channelId);
-    if (!pair) return;
-    for (const messageId of event.deletedIds) {
-      await this.deleteMessageService.telegramDeleteMessage(messageId, pair);
-    }
   };
 }

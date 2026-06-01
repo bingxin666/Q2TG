@@ -1,4 +1,3 @@
-import { CreateOicqParams } from '../OicqClient';
 import { Friend, Group, SendableElem } from './entity';
 import {
   FriendIncreaseEvent,
@@ -7,7 +6,7 @@ import {
   MessageEvent,
   MessageRecallEvent, PokeEvent,
 } from './events';
-import type { FriendRequestEvent, GroupInviteEvent, ImageElem } from '@icqqjs/icqq';
+import type { FriendRequestEvent, GroupInviteEvent, ImageElem } from '../../types/qq-types';
 import { CreateNapCatParams } from '../NapCatClient';
 
 export * from './events';
@@ -17,7 +16,7 @@ export interface CreateQQClientParamsBase {
   id: number;
 }
 
-export type CreateQQClientParams = CreateOicqParams | CreateNapCatParams;
+export type CreateQQClientParams = CreateNapCatParams;
 
 export abstract class QQClient {
   protected constructor(
@@ -45,9 +44,6 @@ export abstract class QQClient {
     };
 
     switch (params.type) {
-      case 'oicq':
-        clientType = require('../OicqClient').default;
-        break;
       case 'napcat':
         clientType = require('../NapCatClient').NapCatClient;
         break;
