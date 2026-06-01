@@ -1,4 +1,4 @@
-import { MessageElem } from "@icqqjs/icqq"
+import type { MessageElem } from './QQTypes';
 
 export type MessageElemExt = MessageElem | {
   type: 'video-loop',

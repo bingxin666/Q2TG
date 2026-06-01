@@ -1,6 +1,6 @@
 import type DateGroup from '../types/DateGroup';
 import type SenderGroup from '../types/SenderGroup';
-import { ForwardMessage } from '@icqqjs/icqq';
+import type { ForwardMessage } from '../types/QQTypes';
 import { format } from 'date-fns';
 import getUserAvatarUrl from './getUserAvatarUrl';
 

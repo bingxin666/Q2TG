@@ -2,7 +2,7 @@ import { defineComponent, PropType } from 'vue';
 import MessageElement from './MessageElement';
 import styles from './Bubble.module.sass';
 import { NTime } from 'naive-ui';
-import { ForwardMessage } from '@icqqjs/icqq';
+import type { ForwardMessage } from '../types/QQTypes';
 
 export default defineComponent({
   props: {

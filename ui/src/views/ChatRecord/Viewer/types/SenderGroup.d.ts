@@ -1,5 +1,5 @@
 // 同一个人连续的一组消息，用于合并头像
-import { ForwardMessage } from '@icqqjs/icqq';
+import type { ForwardMessage } from './QQTypes';
 
 type SenderGroup = {
   id: number

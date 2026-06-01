@@ -5,9 +5,6 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
-  '@icqqjs/icqq@1.4.0':
-    hash: 4w6g4n5xncjdap3ncvvtjfe2uy
-    path: patches/@icqqjs__icqq@1.4.0.patch
   telegram@2.26.8:
     hash: 6ezi5zx3h54zaimfvrhyk2gpfa
     path: patches/telegram@2.26.8.patch
@@ -25,9 +22,6 @@ importers:
       '@bogeychan/elysia-polyfills':
         specifier: ^0.6.4
         version: 0.6.4(elysia@1.1.26(@sinclair/typebox@0.34.13)(typescript@5.7.2))
-      '@icqqjs/icqq':
-        specifier: 1.4.0
-        version: 1.4.0(patch_hash=4w6g4n5xncjdap3ncvvtjfe2uy)(bufferutil@4.0.8)(elysia@1.1.26(@sinclair/typebox@0.34.13)(typescript@5.7.2))(utf-8-validate@5.0.10)
       '@prisma/client':
         specifier: 6.1.0
         version: 6.1.0(prisma@6.1.0)
@@ -167,9 +161,6 @@ importers:
       '@elysiajs/eden':
         specifier: ^1.1.2
         version: 1.1.3(elysia@1.1.26(@sinclair/typebox@0.34.13)(typescript@5.7.2))
-      '@icqqjs/icqq':
-        specifier: 1.4.0
-        version: 1.4.0(patch_hash=4w6g4n5xncjdap3ncvvtjfe2uy)(bufferutil@4.0.8)(elysia@1.1.26(@sinclair/typebox@0.34.13)(typescript@5.7.2))(utf-8-validate@6.0.5)
       '@unocss/reset':
         specifier: ^0.62.0
         version: 0.62.4
@@ -813,10 +804,6 @@ packages:
 
   '@iconify/utils@2.2.1':
     resolution: {integrity: sha512-0/7J7hk4PqXmxo5PDBDxmnecw5PxklZJfNjIVG9FM0mEfVrvfudS22rYWsqVk6gR3UJ/mSYS90X4R3znXnqfNA==}
-
-  '@icqqjs/icqq@1.4.0':
-    resolution: {integrity: sha512-HutCMUGcHcSwNPRlZA5pMVbEDEPKsU4akcoehDzOqBYiutYeKUQAO9oq195m4MMNPGmg9N+dgrpfxbFHAE9paw==, tarball: https://npm.pkg.github.com/download/@icqqjs/icqq/1.4.0/de2627161f651c185d6528e4871c4bed61db6e71}
-    engines: {node: '>= v14'}
 
   '@img/sharp-darwin-arm64@0.33.5':
     resolution: {integrity: sha512-UT4p+iz/2H4twwAoLCqfA9UH5pI6DggwKEGuaPy7nCVQ8ZsiY5PIcrRvD1DzuY3qYL07NtIQcWnBSY/heikIFQ==}
@@ -2623,18 +2610,12 @@ packages:
   lodash.defaults@4.2.0:
     resolution: {integrity: sha512-qjxPLHd3r5DnsdGacqOMU6pb/avJzdh9tFX2ymgoZE27BmjXrNy/y4LoaiTeAb+O3gL8AfpJGtqfX/ae2leYYQ==}
 
-  lodash.merge@4.6.2:
-    resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
-
   lodash@4.17.21:
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
 
   log4js@6.9.1:
     resolution: {integrity: sha512-1somDdy9sChrr9/f4UlzhdaGfDR2c/SaD2a4T7qEkG4jTS57/B3qmnjLYePwQ8cqWnUHZI0iAKxMBpCZICiZ2g==}
     engines: {node: '>=8.0'}
-
-  long@5.2.3:
-    resolution: {integrity: sha512-lcHwpNoggQTObv5apGNCTdJrO69eHOZMi4BNC+rTLER8iHAqGrUVeLh/irVIM7zTw2bOXA8T6uNPeujwOLg/2Q==}
 
   lottie-node@2.0.0:
     resolution: {integrity: sha512-mhN6c90gvbieC9j4HL3+Wc3t+l/FntWVACQVr2WJ3yq4IsdP9YpUw4zIBh/j5tcAEL8VqRznM1fPhwkjsmvrfA==}
@@ -2793,11 +2774,6 @@ packages:
 
   napi-build-utils@1.0.2:
     resolution: {integrity: sha512-ONmRUqK7zj7DWX0D9ADe03wbwOBZxNAfF20PlGfCWQcD3+/MakShIHrMqx9YwPTfxDdF1zLeL+RGZiR9kGMLdg==}
-
-  needle@2.9.1:
-    resolution: {integrity: sha512-6R9fqJ5Zcmf+uYaFgdIHmLwNldn5HbK8L5ybn7Uz+ylX/rnOsSp1AHcvQSrCaFN+qNM1wpymHqD7mVasEOlHGQ==}
-    engines: {node: '>= 4.4.x'}
-    hasBin: true
 
   negotiator@0.6.3:
     resolution: {integrity: sha512-+EUsqGPLsM+j/zdChZjsnX51g4XrHFOIXwfnCVPGlQk/k5giakcKsuxCObBRu6DSm9opw/O6slWbJdghQM4bBg==}
@@ -2981,10 +2957,6 @@ packages:
     resolution: {integrity: sha512-TRzzuFRRmEoSW/p1KVAmiOgPco2Irlah+bGFCeNfJXxxYGwSw7YwAOAcd7X28K/m5bjBWKsC29KyoMfHbypayg==}
     engines: {node: '>=12.13.0'}
 
-  pngjs@7.0.0:
-    resolution: {integrity: sha512-LKWqWJRhstyYo9pGvgor/ivk2w94eSjE3RGVuzLGlr3NmD8bf7RcYGze1mNdEHRP6TRP6rMuDHk5t44hnTRyow==}
-    engines: {node: '>=14.19.0'}
-
   postcss@8.4.49:
     resolution: {integrity: sha512-OCVPnIObs4N29kxTjzLfUryOkvZEq+pf8jTF0lg8E7uETuWHA+v7j3c/xJmiqpX450191LlmZfUKkXxkTry7nA==}
     engines: {node: ^10 || ^12 || >=14}
@@ -3002,9 +2974,6 @@ packages:
     resolution: {integrity: sha512-aFI3Yi+ApUxkwCJJwyQSwpyzUX7YX3ihzuHNHOyv4GJg3X5tQsmRaJEnZ+ZyfHpMtnyahhmXVfbTZ+lS8ZtfKw==}
     engines: {node: '>=18.18'}
     hasBin: true
-
-  probe-image-size@7.2.3:
-    resolution: {integrity: sha512-HubhG4Rb2UH8YtV4ba0Vp5bQ7L78RTONYu/ujmCu5nBI8wGv24s4E9xSKBi0N1MowRpxk76pFCpJtW0KPzOK0w==}
 
   process@0.11.10:
     resolution: {integrity: sha512-cdGef/drWFoydD1JsMzuFf8100nZl+GT+yacc2bEced5f9Rjk4z+WtFUTBu9PhOi9j/jfmBPu0mMEY4wIdAF8A==}
@@ -3026,11 +2995,6 @@ packages:
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
-
-  q2tg-main@file:main:
-    resolution: {directory: main, type: directory}
-    engines: {node: '>=22.0.0'}
-    hasBin: true
 
   qs@6.12.1:
     resolution: {integrity: sha512-zWmv4RSuB9r2mYQw3zxQuHWeU+42aKi1wWig/j4ele4ygELZ7PEO6MM7rim9oAQH2A5MWfsAVf/jPvTPgCbvUQ==}
@@ -3193,10 +3157,6 @@ packages:
     resolution: {integrity: sha512-DnhFzCFUpb2FnkulKaerv6qryQJ70CVs+19OsskVOHYkB0MwiyoWwcoB8TwuL2wJd+kskqBRBHml0UKo8UPcPA==}
     hasBin: true
 
-  silk-wasm@3.6.3:
-    resolution: {integrity: sha512-o7/rIrxyyfZ2VJJdzxNPbfpKH7NNwusKdlQdnFy78Lx74C5vJt6g4O4/JoRQEwX3OJiSzX/qCThWUD8KWA4x9g==}
-    engines: {node: '>=16.14.0'}
-
   simple-concat@1.0.1:
     resolution: {integrity: sha512-cSFtAPtRhljv69IK0hTVZQ+OfE9nePi/rtJmw5UjHeVyVroEqJXP1sFztKUy1qU+xvz3u/sfYJLa947b7nAN2Q==}
 
@@ -3267,9 +3227,6 @@ packages:
 
   store2@2.14.3:
     resolution: {integrity: sha512-4QcZ+yx7nzEFiV4BMLnr/pRa5HYzNITX2ri0Zh6sT9EyQHbBHacC6YigllUPU9X3D0f/22QCgfokpKs52YRrUg==}
-
-  stream-parser@0.3.1:
-    resolution: {integrity: sha512-bJ/HgKq41nlKvlhccD5kaCr/P+Hu0wPNKPJOH7en+YrJu/9EgqUF+88w5Jb6KNcjOFMhfX4B2asfeAtIGuHObQ==}
 
   streamroller@3.1.5:
     resolution: {integrity: sha512-KFxaM7XT+irxvdqSP1LGLgNWbYN7ay5owZ3r/8t77p+EtSUAfUgtl7be3xtqtOmGUl9K9YPO2ca8133RlTjvKw==}
@@ -3393,9 +3350,6 @@ packages:
   treemate@0.3.11:
     resolution: {integrity: sha512-M8RGFoKtZ8dF+iwJfAJTOH/SM4KluKOKRJpjCMhI8bG3qB74zrFoArKZ62ll0Fr3mqkMJiQOmWYkdYgDeITYQg==}
 
-  triptrap@0.0.17:
-    resolution: {integrity: sha512-hXc5npX73EeFc64PX1fyofdeyMVyXrNwLNbxAkirymK3AoTcn+xfbeYjfXOJl8iuKsciYQf1Q6VusAK1FUVcGw==}
-
   ts-custom-error@3.3.1:
     resolution: {integrity: sha512-5OX1tzOjxWEgsr/YEUWSuPrQ00deKLh6D7OTWcvNHm12/7QPyRh8SYpyWvA4IZv8H/+GQWQEh/kwo95Q9OVW1A==}
     engines: {node: '>=14.0.0'}
@@ -3500,10 +3454,6 @@ packages:
 
   utf-8-validate@5.0.10:
     resolution: {integrity: sha512-Z6czzLq4u8fPOyx7TU6X3dvUZVvoJmxSQ+IcrlmagKhilxlhZgxPK6C5Jqbkw1IDUmFTM+cz9QDnnLTwDz/2gQ==}
-    engines: {node: '>=6.14.2'}
-
-  utf-8-validate@6.0.5:
-    resolution: {integrity: sha512-EYZR+OpIXp9Y1eG1iueg8KRsY8TuT8VNgnanZ0uA3STqhHQTLwbl+WX76/9X5OY12yQubymBpaBSmMPkSTQcKA==}
     engines: {node: '>=6.14.2'}
 
   utif2@4.1.0:
@@ -4184,44 +4134,6 @@ snapshots:
       mlly: 1.7.3
     transitivePeerDependencies:
       - supports-color
-
-  '@icqqjs/icqq@1.4.0(patch_hash=4w6g4n5xncjdap3ncvvtjfe2uy)(bufferutil@4.0.8)(elysia@1.1.26(@sinclair/typebox@0.34.13)(typescript@5.7.2))(utf-8-validate@5.0.10)':
-    dependencies:
-      '@icqqjs/icqq': q2tg-main@file:main(bufferutil@4.0.8)(elysia@1.1.26(@sinclair/typebox@0.34.13)(typescript@5.7.2))(utf-8-validate@5.0.10)
-      axios: 1.7.9
-      log4js: 6.9.1
-      long: 5.2.3
-      pngjs: 7.0.0
-      probe-image-size: 7.2.3
-      silk-wasm: 3.6.3
-      triptrap: 0.0.17
-      ws: 8.18.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)
-    transitivePeerDependencies:
-      - bufferutil
-      - debug
-      - elysia
-      - encoding
-      - supports-color
-      - utf-8-validate
-
-  '@icqqjs/icqq@1.4.0(patch_hash=4w6g4n5xncjdap3ncvvtjfe2uy)(bufferutil@4.0.8)(elysia@1.1.26(@sinclair/typebox@0.34.13)(typescript@5.7.2))(utf-8-validate@6.0.5)':
-    dependencies:
-      '@icqqjs/icqq': q2tg-main@file:main(bufferutil@4.0.8)(elysia@1.1.26(@sinclair/typebox@0.34.13)(typescript@5.7.2))(utf-8-validate@6.0.5)
-      axios: 1.7.9
-      log4js: 6.9.1
-      long: 5.2.3
-      pngjs: 7.0.0
-      probe-image-size: 7.2.3
-      silk-wasm: 3.6.3
-      triptrap: 0.0.17
-      ws: 8.18.0(bufferutil@4.0.8)(utf-8-validate@6.0.5)
-    transitivePeerDependencies:
-      - bufferutil
-      - debug
-      - elysia
-      - encoding
-      - supports-color
-      - utf-8-validate
 
   '@img/sharp-darwin-arm64@0.33.5':
     optionalDependencies:
@@ -6058,78 +5970,6 @@ snapshots:
 
   jsbn@1.1.0: {}
 
-  jsdom@16.7.0(bufferutil@4.0.8)(canvas@2.11.2)(utf-8-validate@5.0.10):
-    dependencies:
-      abab: 2.0.6
-      acorn: 8.12.1
-      acorn-globals: 6.0.0
-      cssom: 0.4.4
-      cssstyle: 2.3.0
-      data-urls: 2.0.0
-      decimal.js: 10.4.3
-      domexception: 2.0.1
-      escodegen: 2.1.0
-      form-data: 3.0.2
-      html-encoding-sniffer: 2.0.1
-      http-proxy-agent: 4.0.1
-      https-proxy-agent: 5.0.1
-      is-potential-custom-element-name: 1.0.1
-      nwsapi: 2.2.10
-      parse5: 6.0.1
-      saxes: 5.0.1
-      symbol-tree: 3.2.4
-      tough-cookie: 4.1.4
-      w3c-hr-time: 1.0.2
-      w3c-xmlserializer: 2.0.0
-      webidl-conversions: 6.1.0
-      whatwg-encoding: 1.0.5
-      whatwg-mimetype: 2.3.0
-      whatwg-url: 8.7.0
-      ws: 7.5.10(bufferutil@4.0.8)(utf-8-validate@5.0.10)
-      xml-name-validator: 3.0.0
-    optionalDependencies:
-      canvas: 2.11.2
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
-
-  jsdom@16.7.0(bufferutil@4.0.8)(canvas@2.11.2)(utf-8-validate@6.0.5):
-    dependencies:
-      abab: 2.0.6
-      acorn: 8.12.1
-      acorn-globals: 6.0.0
-      cssom: 0.4.4
-      cssstyle: 2.3.0
-      data-urls: 2.0.0
-      decimal.js: 10.4.3
-      domexception: 2.0.1
-      escodegen: 2.1.0
-      form-data: 3.0.2
-      html-encoding-sniffer: 2.0.1
-      http-proxy-agent: 4.0.1
-      https-proxy-agent: 5.0.1
-      is-potential-custom-element-name: 1.0.1
-      nwsapi: 2.2.10
-      parse5: 6.0.1
-      saxes: 5.0.1
-      symbol-tree: 3.2.4
-      tough-cookie: 4.1.4
-      w3c-hr-time: 1.0.2
-      w3c-xmlserializer: 2.0.0
-      webidl-conversions: 6.1.0
-      whatwg-encoding: 1.0.5
-      whatwg-mimetype: 2.3.0
-      whatwg-url: 8.7.0
-      ws: 7.5.10(bufferutil@4.0.8)(utf-8-validate@6.0.5)
-      xml-name-validator: 3.0.0
-    optionalDependencies:
-      canvas: 2.11.2
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
-
   jsdom@16.7.0(bufferutil@4.0.8)(canvas@3.0.1)(utf-8-validate@5.0.10):
     dependencies:
       abab: 2.0.6
@@ -6284,8 +6124,6 @@ snapshots:
 
   lodash.defaults@4.2.0: {}
 
-  lodash.merge@4.6.2: {}
-
   lodash@4.17.21: {}
 
   log4js@6.9.1:
@@ -6298,15 +6136,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  long@5.2.3: {}
-
-  lottie-node@2.0.0(canvas@2.11.2)(jsdom@16.7.0(bufferutil@4.0.8)(canvas@2.11.2)(utf-8-validate@6.0.5))(lottie-web@5.12.2):
-    dependencies:
-      canvas: 2.11.2
-      jsdom: 16.7.0(bufferutil@4.0.8)(canvas@2.11.2)(utf-8-validate@6.0.5)
-      lottie-web: 5.12.2
-
-  lottie-node@2.0.0(canvas@2.11.2)(jsdom@16.7.0(bufferutil@4.0.8)(canvas@3.0.1)(utf-8-validate@5.0.10))(lottie-web@5.12.2):
+  lottie-node@2.0.0(canvas@2.11.2)(jsdom@16.7.0(bufferutil@4.0.8)(canvas@2.11.2)(utf-8-validate@5.0.10))(lottie-web@5.12.2):
     dependencies:
       canvas: 2.11.2
       jsdom: 16.7.0(bufferutil@4.0.8)(canvas@3.0.1)(utf-8-validate@5.0.10)
@@ -6443,14 +6273,6 @@ snapshots:
   nanoid@5.0.9: {}
 
   napi-build-utils@1.0.2: {}
-
-  needle@2.9.1:
-    dependencies:
-      debug: 3.2.7
-      iconv-lite: 0.4.24
-      sax: 1.4.1
-    transitivePeerDependencies:
-      - supports-color
 
   negotiator@0.6.3: {}
 
@@ -6598,8 +6420,6 @@ snapshots:
 
   pngjs@6.0.0: {}
 
-  pngjs@7.0.0: {}
-
   postcss@8.4.49:
     dependencies:
       nanoid: 3.3.8
@@ -6634,14 +6454,6 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
-  probe-image-size@7.2.3:
-    dependencies:
-      lodash.merge: 4.6.2
-      needle: 2.9.1
-      stream-parser: 0.3.1
-    transitivePeerDependencies:
-      - supports-color
-
   process@0.11.10: {}
 
   prompts@2.4.2:
@@ -6659,42 +6471,6 @@ snapshots:
       once: 1.4.0
 
   punycode@2.3.1: {}
-
-  q2tg-main@file:main(bufferutil@4.0.8)(elysia@1.1.26(@sinclair/typebox@0.34.13)(typescript@5.7.2))(utf-8-validate@5.0.10):
-    dependencies:
-      '@bogeychan/elysia-polyfills': 0.6.4(elysia@1.1.26(@sinclair/typebox@0.34.13)(typescript@5.7.2))
-      '@icqqjs/icqq': 1.4.0(patch_hash=4w6g4n5xncjdap3ncvvtjfe2uy)(bufferutil@4.0.8)(elysia@1.1.26(@sinclair/typebox@0.34.13)(typescript@5.7.2))(utf-8-validate@5.0.10)
-      '@prisma/client': 6.1.0(prisma@6.1.0)
-      dockerode: 4.0.2
-      prisma: 6.1.0
-      quote-api: https://github.com/Clansty/quote-api/archive/014b21138afbbe0e12c91b00561414b1e851fc0f.tar.gz(bufferutil@4.0.8)(utf-8-validate@5.0.10)
-      sharp: 0.33.5
-      silk-sdk: 0.2.2
-    transitivePeerDependencies:
-      - bufferutil
-      - debug
-      - elysia
-      - encoding
-      - supports-color
-      - utf-8-validate
-
-  q2tg-main@file:main(bufferutil@4.0.8)(elysia@1.1.26(@sinclair/typebox@0.34.13)(typescript@5.7.2))(utf-8-validate@6.0.5):
-    dependencies:
-      '@bogeychan/elysia-polyfills': 0.6.4(elysia@1.1.26(@sinclair/typebox@0.34.13)(typescript@5.7.2))
-      '@icqqjs/icqq': 1.4.0(patch_hash=4w6g4n5xncjdap3ncvvtjfe2uy)(bufferutil@4.0.8)(elysia@1.1.26(@sinclair/typebox@0.34.13)(typescript@5.7.2))(utf-8-validate@6.0.5)
-      '@prisma/client': 6.1.0(prisma@6.1.0)
-      dockerode: 4.0.2
-      prisma: 6.1.0
-      quote-api: https://github.com/Clansty/quote-api/archive/014b21138afbbe0e12c91b00561414b1e851fc0f.tar.gz(bufferutil@4.0.8)(utf-8-validate@6.0.5)
-      sharp: 0.33.5
-      silk-sdk: 0.2.2
-    transitivePeerDependencies:
-      - bufferutil
-      - debug
-      - elysia
-      - encoding
-      - supports-color
-      - utf-8-validate
 
   qs@6.12.1:
     dependencies:
@@ -6714,41 +6490,14 @@ snapshots:
       dotenv: 7.0.0
       emoji-db: 14.0.1
       jimp: 0.22.12
-      jsdom: 16.7.0(bufferutil@4.0.8)(canvas@2.11.2)(utf-8-validate@5.0.10)
+      jsdom: 16.7.0(bufferutil@4.0.8)(canvas@3.0.1)(utf-8-validate@5.0.10)
       koa: 2.15.3
       koa-bodyparser: 4.4.1
       koa-logger: 3.2.1
       koa-ratelimit: 4.3.0
       koa-response-time: 2.1.0
       koa-router: 7.4.0
-      lottie-node: 2.0.0(canvas@2.11.2)(jsdom@16.7.0(bufferutil@4.0.8)(canvas@3.0.1)(utf-8-validate@5.0.10))(lottie-web@5.12.2)
-      lottie-web: 5.12.2
-      lru-cache: 5.1.1
-      object-sizeof: 1.6.3
-      runes: 0.4.3
-      sharp: 0.33.5
-      smartcrop-sharp: 2.0.8(sharp@0.33.5)
-      telegraf: 3.40.0
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - supports-color
-      - utf-8-validate
-
-  quote-api@https://github.com/Clansty/quote-api/archive/014b21138afbbe0e12c91b00561414b1e851fc0f.tar.gz(bufferutil@4.0.8)(utf-8-validate@6.0.5):
-    dependencies:
-      canvas: 2.11.2
-      dotenv: 7.0.0
-      emoji-db: 14.0.1
-      jimp: 0.22.12
-      jsdom: 16.7.0(bufferutil@4.0.8)(canvas@2.11.2)(utf-8-validate@6.0.5)
-      koa: 2.15.3
-      koa-bodyparser: 4.4.1
-      koa-logger: 3.2.1
-      koa-ratelimit: 4.3.0
-      koa-response-time: 2.1.0
-      koa-router: 7.4.0
-      lottie-node: 2.0.0(canvas@2.11.2)(jsdom@16.7.0(bufferutil@4.0.8)(canvas@2.11.2)(utf-8-validate@6.0.5))(lottie-web@5.12.2)
+      lottie-node: 2.0.0(canvas@2.11.2)(jsdom@16.7.0(bufferutil@4.0.8)(canvas@2.11.2)(utf-8-validate@5.0.10))(lottie-web@5.12.2)
       lottie-web: 5.12.2
       lru-cache: 5.1.1
       object-sizeof: 1.6.3
@@ -6934,8 +6683,6 @@ snapshots:
       bindings: 1.5.0
       cac: 6.7.14
 
-  silk-wasm@3.6.3: {}
-
   simple-concat@1.0.1: {}
 
   simple-get@3.1.1:
@@ -7002,12 +6749,6 @@ snapshots:
   statuses@2.0.1: {}
 
   store2@2.14.3: {}
-
-  stream-parser@0.3.1:
-    dependencies:
-      debug: 2.6.9
-    transitivePeerDependencies:
-      - supports-color
 
   streamroller@3.1.5:
     dependencies:
@@ -7173,8 +6914,6 @@ snapshots:
 
   treemate@0.3.11: {}
 
-  triptrap@0.0.17: {}
-
   ts-custom-error@3.3.1: {}
 
   ts-morph@18.0.0:
@@ -7283,11 +7022,6 @@ snapshots:
   utf-8-validate@5.0.10:
     dependencies:
       node-gyp-build: 4.8.4
-
-  utf-8-validate@6.0.5:
-    dependencies:
-      node-gyp-build: 4.8.4
-    optional: true
 
   utif2@4.1.0:
     dependencies:
@@ -7433,20 +7167,10 @@ snapshots:
       bufferutil: 4.0.8
       utf-8-validate: 5.0.10
 
-  ws@7.5.10(bufferutil@4.0.8)(utf-8-validate@6.0.5):
-    optionalDependencies:
-      bufferutil: 4.0.8
-      utf-8-validate: 6.0.5
-
   ws@8.18.0(bufferutil@4.0.8)(utf-8-validate@5.0.10):
     optionalDependencies:
       bufferutil: 4.0.8
       utf-8-validate: 5.0.10
-
-  ws@8.18.0(bufferutil@4.0.8)(utf-8-validate@6.0.5):
-    optionalDependencies:
-      bufferutil: 4.0.8
-      utf-8-validate: 6.0.5
 
   xhr@2.6.0:
     dependencies:

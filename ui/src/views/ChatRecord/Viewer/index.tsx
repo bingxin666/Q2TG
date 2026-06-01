@@ -1,6 +1,6 @@
 import { computed, defineComponent, PropType } from 'vue';
 import { dateZhCN, NConfigProvider, zhCN } from 'naive-ui';
-import { ForwardMessage } from '@icqqjs/icqq';
+import type { ForwardMessage } from './types/QQTypes';
 import processHistory from './utils/processHistory';
 import DateContainer from './components/DateContainer';
 
