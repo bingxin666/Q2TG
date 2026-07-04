@@ -3,6 +3,7 @@ import Telegram from '../client/Telegram';
 import { Api } from 'telegram';
 import Instance from '../models/Instance';
 import { MessageRecallEvent, QQClient } from '../client/QQClient';
+import { TelegramDeletedMessagesEvent } from '../client/TelegramDeletedMessages';
 
 export default class DeleteMessageController {
   private readonly deleteMessageService: DeleteMessageService;
@@ -13,6 +14,7 @@ export default class DeleteMessageController {
     this.deleteMessageService = new DeleteMessageService(this.instance, tgBot);
     tgBot.addNewMessageEventHandler(this.onTelegramMessage);
     tgBot.addEditedMessageEventHandler(this.onTelegramEditMessage);
+    tgBot.addDeletedMessagesEventHandler(this.onTelegramDeletedMessages);
     oicq.addMessageRecallEventHandler(this.onQqRecall);
   }
 
@@ -35,6 +37,10 @@ export default class DeleteMessageController {
     }
     await this.deleteMessageService.telegramDeleteMessage(message.id, pair);
     return await this.onTelegramMessage(message);
+  };
+
+  private onTelegramDeletedMessages = async (event: TelegramDeletedMessagesEvent) => {
+    await this.deleteMessageService.handleTelegramDeletedMessages(event);
   };
 
   private onQqRecall = async (event: MessageRecallEvent) => {

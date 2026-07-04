@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   telegram@2.26.8:
-    hash: 6ezi5zx3h54zaimfvrhyk2gpfa
+    hash: z64bw2p5ptex5ogtp2nbwbfkn4
     path: patches/telegram@2.26.8.patch
 
 importers:
@@ -31,6 +31,9 @@ importers:
       dockerode:
         specifier: ^4.0.2
         version: 4.0.2
+      prebuilt-tdlib:
+        specifier: 0.1008065.0
+        version: 0.1008065.0
       prisma:
         specifier: 6.1.0
         version: 6.1.0
@@ -43,6 +46,9 @@ importers:
       silk-sdk:
         specifier: ^0.2.2
         version: 0.2.2
+      tdl:
+        specifier: 8.1.0
+        version: 8.1.0
     devDependencies:
       '@elysiajs/html':
         specifier: ^1.1.1
@@ -142,7 +148,7 @@ importers:
         version: 4.4.0
       telegram:
         specifier: ^2.26.8
-        version: 2.26.8(patch_hash=6ezi5zx3h54zaimfvrhyk2gpfa)
+        version: 2.26.8(patch_hash=z64bw2p5ptex5ogtp2nbwbfkn4)
       tmp-promise:
         specifier: ^3.0.3
         version: 3.0.3
@@ -1210,6 +1216,44 @@ packages:
   '@polka/url@1.0.0-next.28':
     resolution: {integrity: sha512-8LduaNlMZGwdZ6qWrKlfa+2M4gahzFkprZiAt2TF8uS0qQgBizKXpXURqvTJ4WtmupWxaLqjRb2UCTe72mu+Aw==}
 
+  '@prebuilt-tdlib/darwin-arm64@0.1008065.0':
+    resolution: {integrity: sha512-5A6p2YSDURtAOCcoBN2tCfIhOTG2RYgozeAp/cp2qd1+owERvqx4Wy5xutiwmq1b/AZ4naOTjgH9t9BCQl1RJQ==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@prebuilt-tdlib/darwin-x64@0.1008065.0':
+    resolution: {integrity: sha512-FroEodjiKIqGhuv3ZWyBt6saifKuiClIaqZgors048TB7t73TWKw2MJ17DD0g+ybfxkdZj1bxLdOGoNC5H7yCQ==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@prebuilt-tdlib/linux-arm64-glibc@0.1008065.0':
+    resolution: {integrity: sha512-hjsShSo3cyrwzjBEgJIGPbKkhFX5iht0s221vPCYJ8GExqJ/KJm1bjFLSkF02FyLQYl5d41lAJtMFKLG/yQ9wA==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@prebuilt-tdlib/linux-arm64-musl@0.1008065.0':
+    resolution: {integrity: sha512-9VS3MW2sqXfFr28ZsFgGuRUkwo+vb/xfJfySGo8D+uBjbe/wysitgFpBlS/J3wB8eRsiCjPUWg/fo6VkIBfKxA==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@prebuilt-tdlib/linux-x64-glibc@0.1008065.0':
+    resolution: {integrity: sha512-Y72TtxX33TjfpvNxUyzS/3FdtJXia2nSCt5G61sOeiv6J4rehbQs7SRim86Jcn2/N5uEUA3eIwUBEVVOWKowJw==}
+    cpu: [x64]
+    os: [linux]
+
+  '@prebuilt-tdlib/linux-x64-musl@0.1008065.0':
+    resolution: {integrity: sha512-ij3U9h4JV9wvXoSV2TFNzKw3Fu6OYUhDMw3LYd7qlCdUxrslb8bvBOGetJzRgMP92nDXSogDBMwlCh1ZNQRr1w==}
+    cpu: [x64]
+    os: [linux]
+
+  '@prebuilt-tdlib/types@0.1008065.0':
+    resolution: {integrity: sha512-CxABWxZbcwPX7S+6jfjD16Ed1J2j/VsjVtjiBJLVdB2zZhrL9JHM/0yCBDJYNAKdnaJDkVsBd3b0rmy+mm1lDQ==}
+
+  '@prebuilt-tdlib/win32-x64@0.1008065.0':
+    resolution: {integrity: sha512-f4DTpOVAKLdI4ZEL5W0BtS9/zGWEBjX8Ev2iIJTShg4LYH+51gTUhsbvORRAZECGskrQrFl+tTiQ617q8yTqLw==}
+    cpu: [x64]
+    os: [win32]
+
   '@prisma/client@6.1.0':
     resolution: {integrity: sha512-AbQYc5+EJKm1Ydfq3KxwcGiy7wIbm4/QbjCKWWoNROtvy7d6a3gmAGkKjK0iUCzh+rHV8xDhD5Cge8ke/kiy5Q==}
     engines: {node: '>=18.18'}
@@ -1941,8 +1985,8 @@ packages:
       supports-color:
         optional: true
 
-  debug@4.3.6:
-    resolution: {integrity: sha512-O/09Bd4Z1fBrU4VzkhFqVgpPzaGbw6Sm9FEkBT1A/YBXQFGuuSxa1dN2nxgxS34JmKXqYx8CZAwEVoJFImUXIg==}
+  debug@4.4.0:
+    resolution: {integrity: sha512-6WTZ/IxCY/T6BALoZHaE4ctp9xm+Z5kY/pzYaCHRFeyVhojxlrm+46y68HA6hr0TcwEssoxNiDEUJQjfPZ/RYA==}
     engines: {node: '>=6.0'}
     peerDependencies:
       supports-color: '*'
@@ -1950,8 +1994,8 @@ packages:
       supports-color:
         optional: true
 
-  debug@4.4.0:
-    resolution: {integrity: sha512-6WTZ/IxCY/T6BALoZHaE4ctp9xm+Z5kY/pzYaCHRFeyVhojxlrm+46y68HA6hr0TcwEssoxNiDEUJQjfPZ/RYA==}
+  debug@4.4.3:
+    resolution: {integrity: sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==}
     engines: {node: '>=6.0'}
     peerDependencies:
       supports-color: '*'
@@ -2227,6 +2271,7 @@ packages:
   fluent-ffmpeg@2.1.3:
     resolution: {integrity: sha512-Be3narBNt2s6bsaqP6Jzq91heDgOEaDCJAXcE3qcma/EJBSy5FB4cvO31XBInuAuKBx8Kptf8dkhjK0IOru39Q==}
     engines: {node: '>=18'}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   follow-redirects@1.15.9:
     resolution: {integrity: sha512-gew4GsXizNgdoRyqmyfMHyAmXsZDk6mHkSxZFCzW9gwlbtOW44CDtYavM+y+72qD/Vq2l550kMF52DT8fOLJqQ==}
@@ -2307,11 +2352,12 @@ packages:
 
   glob@10.4.5:
     resolution: {integrity: sha512-7Bv8RF0k6xjo7d4A/PxYLbUCfb6c+Vpd2/mB2yRDlew7Jb5hEXiCD9ibfO7wpk8i4sevK6DFny9h7EYbM3/sHg==}
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
     hasBin: true
 
   glob@7.2.3:
     resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
-    deprecated: Glob versions prior to v9 are no longer supported
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   global@4.4.0:
     resolution: {integrity: sha512-wv/LAoHdRE3BeTGz53FAamhGlPLhlssK45usmGFThIi4XqnBmjKQ16u+RNbP7WvigRZDxUsM0J3gcQ5yicaL0w==}
@@ -2576,7 +2622,7 @@ packages:
   koa-router@7.4.0:
     resolution: {integrity: sha512-IWhaDXeAnfDBEpWS6hkGdZ1ablgr6Q6pGdXCyK38RbzuH4LkUOpPqPw+3f8l8aTDrQmBQ7xJc0bs2yV4dzcO+g==}
     engines: {node: '>= 4'}
-    deprecated: '**IMPORTANT 10x+ PERFORMANCE UPGRADE**: Please upgrade to v12.0.1+ as we have fixed an issue with debuglog causing 10x slower router benchmark performance, see https://github.com/koajs/router/pull/173'
+    deprecated: 'Please use @koa/router instead, starting from v9! '
 
   koa@2.15.3:
     resolution: {integrity: sha512-j/8tY9j5t+GVMLeioLaxweJiKUayFhlGqNTzf2ZGwL0ZCQijd2RLHK0SLW5Tsko8YyyqCZC2cojIb0/s62qTAg==}
@@ -2968,7 +3014,11 @@ packages:
   prebuild-install@7.1.2:
     resolution: {integrity: sha512-UnNke3IQb6sgarcZIDU3gbMeTp/9SSU1DAIkil7PrqG1vZlBtY5msYccSKSHDqa3hNg436IXK+SNImReuA1wEQ==}
     engines: {node: '>=10'}
+    deprecated: No longer maintained. Please contact the author of the relevant native addon; alternatives are available.
     hasBin: true
+
+  prebuilt-tdlib@0.1008065.0:
+    resolution: {integrity: sha512-i30D0JSgV6ltHGH1K1NZYyYbZW1UEva5hKZ2GRKxfBfU9Pq8lLFFr84pa1FL3uW9Jw+zOxwWOeK5DbyF+ApRVw==}
 
   prisma@6.1.0:
     resolution: {integrity: sha512-aFI3Yi+ApUxkwCJJwyQSwpyzUX7YX3ihzuHNHOyv4GJg3X5tQsmRaJEnZ+ZyfHpMtnyahhmXVfbTZ+lS8ZtfKw==}
@@ -3287,6 +3337,11 @@ packages:
   tar@6.2.1:
     resolution: {integrity: sha512-DZ4yORTwrbTj/7MZYq2w+/ZFdI6OZ/f9SFHR+71gIVUZhOQPHzVCLpvRnPgyaMpfWxxk/4ONva3GQSyNIKRv6A==}
     engines: {node: '>=10'}
+    deprecated: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+
+  tdl@8.1.0:
+    resolution: {integrity: sha512-idpw60gjJdiJALQg0+6UbxtJTMxVhzZAgCO6QzL81gqBYCkEFjm9zM9HwTTQGeOaAavw4yRHymR68yUUiCoKrA==}
+    engines: {node: '>=16.14.0'}
 
   telegraf@3.40.0:
     resolution: {integrity: sha512-wulVjRHrX2zQwbk1/jzg3Ll9Kr0xC7ofXsRPJgcV2yoCFx5oSU41ZaDKNRPsLhjXxW4s9iNM2S2N/ESyiZxTMQ==}
@@ -3566,6 +3621,7 @@ packages:
 
   whatwg-encoding@1.0.5:
     resolution: {integrity: sha512-b5lim54JOPN9HtzvK9HFXvBma/rnfFeqsic0hSpjtDbVxR3dJKLc+KB4V6GgiGOvl7CY/KNh8rxSo9DKQrnUEw==}
+    deprecated: Use @exodus/bytes instead for a more spec-conformant and faster implementation
 
   whatwg-fetch@3.6.20:
     resolution: {integrity: sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg==}
@@ -3661,6 +3717,7 @@ packages:
   yaeti@0.0.6:
     resolution: {integrity: sha512-MvQa//+KcZCUkBTIC9blM+CU9J2GzuTytsOUwf2lidtvkx/6gnEp1QvJv34t9vdjhFmha/mUiNDbN0D0mJWdug==}
     engines: {node: '>=0.10.32'}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
@@ -4551,6 +4608,30 @@ snapshots:
 
   '@polka/url@1.0.0-next.28': {}
 
+  '@prebuilt-tdlib/darwin-arm64@0.1008065.0':
+    optional: true
+
+  '@prebuilt-tdlib/darwin-x64@0.1008065.0':
+    optional: true
+
+  '@prebuilt-tdlib/linux-arm64-glibc@0.1008065.0':
+    optional: true
+
+  '@prebuilt-tdlib/linux-arm64-musl@0.1008065.0':
+    optional: true
+
+  '@prebuilt-tdlib/linux-x64-glibc@0.1008065.0':
+    optional: true
+
+  '@prebuilt-tdlib/linux-x64-musl@0.1008065.0':
+    optional: true
+
+  '@prebuilt-tdlib/types@0.1008065.0':
+    optional: true
+
+  '@prebuilt-tdlib/win32-x64@0.1008065.0':
+    optional: true
+
   '@prisma/client@6.1.0(prisma@6.1.0)':
     optionalDependencies:
       prisma: 6.1.0
@@ -5012,7 +5093,7 @@ snapshots:
 
   agent-base@6.0.2:
     dependencies:
-      debug: 4.3.6
+      debug: 4.4.0
     transitivePeerDependencies:
       - supports-color
 
@@ -5349,11 +5430,11 @@ snapshots:
     dependencies:
       ms: 2.1.2
 
-  debug@4.3.6:
-    dependencies:
-      ms: 2.1.2
-
   debug@4.4.0:
+    dependencies:
+      ms: 2.1.3
+
+  debug@4.4.3:
     dependencies:
       ms: 2.1.3
 
@@ -5398,7 +5479,7 @@ snapshots:
 
   docker-modem@5.0.3:
     dependencies:
-      debug: 4.3.5
+      debug: 4.4.0
       readable-stream: 3.6.2
       split-ca: 1.0.1
       ssh2: 1.15.0
@@ -5845,14 +5926,14 @@ snapshots:
     dependencies:
       '@tootallnate/once': 1.1.2
       agent-base: 6.0.2
-      debug: 4.3.6
+      debug: 4.4.0
     transitivePeerDependencies:
       - supports-color
 
   https-proxy-agent@5.0.1:
     dependencies:
       agent-base: 6.0.2
-      debug: 4.3.6
+      debug: 4.4.0
     transitivePeerDependencies:
       - supports-color
 
@@ -6046,7 +6127,7 @@ snapshots:
 
   koa-ratelimit@4.3.0:
     dependencies:
-      debug: 4.3.6
+      debug: 4.4.0
       lodash.defaults: 4.2.0
       ms: 2.1.3
       ratelimiter: 3.4.1
@@ -6073,7 +6154,7 @@ snapshots:
       content-disposition: 0.5.4
       content-type: 1.0.5
       cookies: 0.9.1
-      debug: 4.3.6
+      debug: 4.4.0
       delegates: 1.0.0
       depd: 2.0.0
       destroy: 1.2.0
@@ -6448,6 +6529,17 @@ snapshots:
       tar-fs: 2.0.1
       tunnel-agent: 0.6.0
 
+  prebuilt-tdlib@0.1008065.0:
+    optionalDependencies:
+      '@prebuilt-tdlib/darwin-arm64': 0.1008065.0
+      '@prebuilt-tdlib/darwin-x64': 0.1008065.0
+      '@prebuilt-tdlib/linux-arm64-glibc': 0.1008065.0
+      '@prebuilt-tdlib/linux-arm64-musl': 0.1008065.0
+      '@prebuilt-tdlib/linux-x64-glibc': 0.1008065.0
+      '@prebuilt-tdlib/linux-x64-musl': 0.1008065.0
+      '@prebuilt-tdlib/types': 0.1008065.0
+      '@prebuilt-tdlib/win32-x64': 0.1008065.0
+
   prisma@6.1.0:
     dependencies:
       '@prisma/engines': 6.1.0
@@ -6753,7 +6845,7 @@ snapshots:
   streamroller@3.1.5:
     dependencies:
       date-format: 4.0.14
-      debug: 4.3.5
+      debug: 4.4.0
       fs-extra: 8.1.0
     transitivePeerDependencies:
       - supports-color
@@ -6830,9 +6922,17 @@ snapshots:
       mkdirp: 1.0.4
       yallist: 4.0.0
 
+  tdl@8.1.0:
+    dependencies:
+      debug: 4.4.3
+      node-addon-api: 7.1.1
+      node-gyp-build: 4.8.4
+    transitivePeerDependencies:
+      - supports-color
+
   telegraf@3.40.0:
     dependencies:
-      debug: 4.3.6
+      debug: 4.4.0
       minimist: 1.2.8
       module-alias: 2.2.3
       node-fetch: 2.7.0
@@ -6842,7 +6942,7 @@ snapshots:
       - encoding
       - supports-color
 
-  telegram@2.26.8(patch_hash=6ezi5zx3h54zaimfvrhyk2gpfa):
+  telegram@2.26.8(patch_hash=z64bw2p5ptex5ogtp2nbwbfkn4):
     dependencies:
       '@cryptography/aes': 0.1.1
       async-mutex: 0.3.2

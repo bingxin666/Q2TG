@@ -41,6 +41,7 @@ model Instance {
   Message       Message[]
   ForwardPair   ForwardPair[]
   botSessionId  Int?
+  botToken      String?
   userSessionId Int?
   qqBotId       Int?
   qqBot         QqBot?        @relation(fields: [qqBotId], references: [id], onDelete: Cascade)

@@ -56,10 +56,12 @@
     "@prisma/client": "6.1.0",
     "canvas": "^3.0.1",
     "dockerode": "^4.0.2",
+    "prebuilt-tdlib": "0.1008065.0",
     "prisma": "6.1.0",
     "quote-api": "https://github.com/Clansty/quote-api/archive/014b21138afbbe0e12c91b00561414b1e851fc0f.tar.gz",
     "sharp": "^0.33.5",
-    "silk-sdk": "^0.2.2"
+    "silk-sdk": "^0.2.2",
+    "tdl": "8.1.0"
   },
   "engines": {
     "node": ">=22.0.0"

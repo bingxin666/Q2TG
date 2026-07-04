@@ -51,6 +51,8 @@ services:
       - SIGN_API=http://sign:4848/sign?key=114514
       - SIGN_VER=9.0.56 # 与上方 sign 容器的配置同步
       - TG_CONNECTION=tcp # 连接 Telegram 的方式，也可以改成 websocket
+      # 使用 TDLib 作为 Telegram 入站更新源，可自动接收编辑/删除事件，不需要 UserBot，只使用 Bot Token
+      #- TG_UPDATES_SOURCE=tdlib
       # 如果你需要使用 /flags set RICH_HEADER 来显示头像，或者正确显示合并转发的消息记录，则需将 q2tg 8080 端口发布到公网，可以使用 cloudflare tunnel
       # 请尽量配置这个服务
       - WEB_ENDPOINT= # https://yourichheader.com 填写你发布到公网的域名

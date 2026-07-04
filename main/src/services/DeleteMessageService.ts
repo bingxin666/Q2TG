@@ -9,6 +9,7 @@ import forwardHelper from '../helpers/forwardHelper';
 import flags from '../constants/flags';
 import { MessageRecallEvent, Group, Friend } from '../client/QQClient';
 import posthog from '../models/posthog';
+import { TelegramDeletedMessagesEvent } from '../client/TelegramDeletedMessages';
 
 export default class DeleteMessageService {
   private readonly log: Logger;
@@ -88,6 +89,18 @@ export default class DeleteMessageService {
       }
     }
     catch (e) {
+    }
+  }
+
+  public async handleTelegramDeletedMessages(event: TelegramDeletedMessagesEvent) {
+    if (event.fromCache || !event.isPermanent) {
+      this.log.debug('忽略非永久或缓存导致的 Telegram 删除事件', event);
+      return;
+    }
+    const pair = this.instance.forwardPairs.find(event.chatId);
+    if (!pair) return;
+    for (const messageId of event.messageIds) {
+      await this.telegramDeleteMessage(messageId, pair, true);
     }
   }
 

@@ -116,3 +116,103 @@ index 9392c42342a97ee253be8295c1a086b690673dca..3721a18b92568236faca12837b3fb074
      });
      const result = await client.invoke(request);
      return client._getResponseMessage(request, result, entity);
+diff --git a/client/telegramBaseClient.d.ts b/client/telegramBaseClient.d.ts
+index 0319ed02fd4b19d4c63bb24012d1efe96d787ff9..92fcb53b827bd94054f1b3d6101ea4aa89a4a37d 100644
+--- a/client/telegramBaseClient.d.ts
++++ b/client/telegramBaseClient.d.ts
+@@ -62,6 +62,8 @@ export interface TelegramClientParams {
+     autoReconnect?: boolean;
+     /** does nothing for now */
+     sequentialUpdates?: boolean;
++    /** Whether to receive and dispatch updates. Defaults to true. */
++    receiveUpdates?: boolean;
+     /** The threshold below which the library should automatically sleep on flood wait and slow mode wait errors (inclusive).<br/>
+      *  For instance, if a FloodWaitError for 17s occurs and floodSleepThreshold is 20s, the library will sleep automatically.<br/>
+      *  If the error was for 21s, it would raise FloodWaitError instead. defaults to 60 sec.*/
+diff --git a/client/telegramBaseClient.js b/client/telegramBaseClient.js
+index 661f96ca2731060c18d5b4303414771dd67ce42e..90af7984c4a0fc26e304fb09ba77b6c0159c42e0 100644
+--- a/client/telegramBaseClient.js
++++ b/client/telegramBaseClient.js
+@@ -37,6 +37,7 @@ const clientParamsDefault = {
+     downloadRetries: 5,
+     autoReconnect: true,
+     sequentialUpdates: false,
++    receiveUpdates: true,
+     floodSleepThreshold: 60,
+     deviceModel: "",
+     systemVersion: "",
+@@ -120,6 +121,7 @@ class TelegramBaseClient {
+         this._selfInputPeer = undefined;
+         this.useWSS = clientParams.useWSS;
+         this._securityChecks = !!clientParams.securityChecks;
++        this._receiveUpdates = clientParams.receiveUpdates !== false;
+         if (this.useWSS && this._proxy) {
+             throw new Error("Cannot use SSL with proxies. You need to disable the useWSS client param in TelegramClient");
+         }
+diff --git a/client/TelegramClient.js b/client/TelegramClient.js
+index 227d74d83df6e745cc9faf6c0a1f425b1e571923..3debb5353f6e64886ead265890e2517f8eaa2383 100644
+--- a/client/TelegramClient.js
++++ b/client/TelegramClient.js
+@@ -1067,7 +1067,7 @@ class TelegramClient extends telegramBaseClient_1.TelegramBaseClient {
+                 autoReconnect: this._autoReconnect,
+                 connectTimeout: this._timeout,
+                 authKeyCallback: this._authKeyCallback.bind(this),
+-                updateCallback: updates_1._handleUpdate.bind(this),
++                updateCallback: this._receiveUpdates ? updates_1._handleUpdate.bind(this) : undefined,
+                 isMainSender: true,
+                 client: this,
+                 securityChecks: this._securityChecks,
+@@ -1086,7 +1086,7 @@ class TelegramClient extends telegramBaseClient_1.TelegramBaseClient {
+             testServers: this.testServers,
+         });
+         if (!(await this._sender.connect(connection, false))) {
+-            if (!this._loopStarted) {
++            if (this._receiveUpdates && !this._loopStarted) {
+                 (0, updates_1._updateLoop)(this);
+                 this._loopStarted = true;
+             }
+@@ -1100,7 +1100,7 @@ class TelegramClient extends telegramBaseClient_1.TelegramBaseClient {
+             layer: AllTLObjects_1.LAYER,
+             query: this._initRequest,
+         }));
+-        if (!this._loopStarted) {
++        if (this._receiveUpdates && !this._loopStarted) {
+             (0, updates_1._updateLoop)(this);
+             this._loopStarted = true;
+         }
+diff --git a/client/auth.js b/client/auth.js
+index 166074a7bf3b3524f7eae8aa6fb05fae3b0bba8c..2c295561de2963a76d62b5c7f2483b99a63e3a92 100644
+--- a/client/auth.js
++++ b/client/auth.js
+@@ -48,7 +48,12 @@ exports.start = start;
+ /** @hidden */
+ async function checkAuthorization(client) {
+     try {
+-        await client.invoke(new tl_1.Api.updates.GetState());
++        if (client._receiveUpdates === false) {
++            await client.invoke(new tl_1.Api.users.GetUsers({ id: [new tl_1.Api.InputUserSelf()] }));
++        }
++        else {
++            await client.invoke(new tl_1.Api.updates.GetState());
++        }
+         return true;
+     }
+     catch (e) {
+diff --git a/client/users.js b/client/users.js
+index 437132d67b623f262c3634a94a9c7a5673907df2..0d4c401754de3154499c3fff994f2cc64794fd0e 100644
+--- a/client/users.js
++++ b/client/users.js
+@@ -128,7 +128,12 @@ exports.isBot = isBot;
+ /** @hidden */
+ async function isUserAuthorized(client) {
+     try {
+-        await client.invoke(new tl_1.Api.updates.GetState());
++        if (client._receiveUpdates === false) {
++            await client.invoke(new tl_1.Api.users.GetUsers({ id: [new tl_1.Api.InputUserSelf()] }));
++        }
++        else {
++            await client.invoke(new tl_1.Api.updates.GetState());
++        }
+         return true;
+     }
+     catch (e) {

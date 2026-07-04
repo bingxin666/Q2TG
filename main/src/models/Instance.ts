@@ -36,6 +36,7 @@ export default class Instance {
   private _isSetup = false;
   private _workMode = '';
   private _botSessionId = 0;
+  private _botToken?: string;
   private _qq: QqBot;
   private _flags: number;
 
@@ -89,6 +90,7 @@ export default class Instance {
     this._owner = Number(dbEntry.owner);
     this._qq = dbEntry.qqBot;
     this._botSessionId = dbEntry.botSessionId;
+    this._botToken = dbEntry.botToken;
     this._isSetup = dbEntry.isSetup;
     this._workMode = dbEntry.workMode;
     this._flags = dbEntry.flags;
@@ -97,11 +99,11 @@ export default class Instance {
   private init(botToken?: string) {
     (async () => {
       this.log.debug('正在登录 TG Bot');
+      const token = this.id === 0 ? env.TG_BOT_TOKEN : botToken || this._botToken;
       if (this.botSessionId) {
-        this.tgBot = await Telegram.connect(this._botSessionId);
+        this.tgBot = await Telegram.connect(this._botSessionId, 'Q2TG', token);
       }
       else {
-        const token = this.id === 0 ? env.TG_BOT_TOKEN : botToken;
         if (!token) {
           throw new Error('botToken 未指定');
         }
@@ -109,6 +111,9 @@ export default class Instance {
           botAuthToken: token,
         });
         this.botSessionId = this.tgBot.sessionId;
+      }
+      if (token && this._botToken !== token) {
+        this.botToken = token;
       }
       this.log.info('TG Bot 登录完成');
       if (!this.isSetup || !this._owner) {
@@ -174,7 +179,7 @@ export default class Instance {
   }
 
   public static async createNew(botToken: string) {
-    const dbEntry = await db.instance.create({ data: {} });
+    const dbEntry = await db.instance.create({ data: { botToken } });
     return await this.start(dbEntry.id, botToken);
   }
 
@@ -247,6 +252,10 @@ export default class Instance {
     return this._botSessionId;
   }
 
+  get botToken() {
+    return this._botToken;
+  }
+
   get flags() {
     return this._flags;
   }
@@ -285,6 +294,15 @@ export default class Instance {
       where: { id: this.id },
     })
       .then(() => this.log.trace(sessionId));
+  }
+
+  set botToken(botToken: string) {
+    this._botToken = botToken;
+    db.instance.update({
+      data: { botToken },
+      where: { id: this.id },
+    })
+      .then(() => this.log.trace('botToken updated'));
   }
 
   set qqBotId(id: number) {

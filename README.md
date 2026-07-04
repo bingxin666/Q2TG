@@ -58,6 +58,16 @@ QQ 群与 Telegram 群相互转发的 bot
 
 即使 QQ 机器人为管理员，也无法撤回其他管理员在 QQ 中发送的消息
 
+## Telegram 入站更新源
+
+默认使用 GramJS 接收 Telegram 更新。若需要在不引入 UserBot 的情况下自动接收 Telegram 编辑和删除事件，可以设置：
+
+```env
+TG_UPDATES_SOURCE=tdlib
+```
+
+该模式只使用 Bot Token 登录 TDLib，不需要手机号或 UserBot。TDLib 入站会接收新消息、编辑消息和删除消息；删除事件会过滤掉缓存删除，只处理永久删除。启用后请避免让同一个 Bot Token 同时被其他 Bot API webhook、getUpdates 或 MTProto 入站消费者接收更新。
+
 ## 免责声明
 
 一切开发旨在学习，请勿用于非法用途。本项目完全免费开源，不会收取任何费用，无任何担保。请勿将本项目用于商业用途。由于使用本程序造成的任何问题，由使用者自行承担，项目开发者不承担任何责任。

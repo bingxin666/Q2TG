@@ -5,8 +5,8 @@ import { EditedMessage, EditedMessageEvent } from 'telegram/events/EditedMessage
 import { DeletedMessage, DeletedMessageEvent } from 'telegram/events/DeletedMessage';
 import { EntityLike } from 'telegram/define';
 import WaitForMessageHelper from '../helpers/WaitForMessageHelper';
-import CallbackQueryHelper from '../helpers/CallbackQueryHelper';
-import { CallbackQuery, CallbackQueryEvent } from 'telegram/events/CallbackQuery';
+import CallbackQueryHelper, { CallbackQueryHandler } from '../helpers/CallbackQueryHelper';
+import { CallbackQuery } from 'telegram/events/CallbackQuery';
 import os from 'os';
 import TelegramChat from './TelegramChat';
 import TelegramSession from '../models/TelegramSession';
@@ -16,10 +16,13 @@ import { IterMessagesParams } from 'telegram/client/messages';
 import { PromisedNetSockets, PromisedWebSockets } from 'telegram/extensions';
 import { ConnectionTCPFull, ConnectionTCPObfuscated } from 'telegram/network';
 import env from '../models/env';
+import TelegramTdlibUpdates from './TelegramTdlibUpdates';
+import { TelegramDeletedMessagesEvent } from './TelegramDeletedMessages';
 
 type MessageHandler = (message: Api.Message) => Promise<boolean | void>;
 type ServiceMessageHandler = (message: Api.MessageService) => Promise<boolean | void>;
 type ChannelUserTypingHandler = (event: Api.UpdateChannelUserTyping) => Promise<boolean | void>;
+type DeletedMessagesHandler = (event: TelegramDeletedMessagesEvent) => Promise<boolean | void>;
 
 export default class Telegram {
   private readonly client: TelegramClient;
@@ -29,6 +32,9 @@ export default class Telegram {
   private readonly onEditedMessageHandlers: Array<MessageHandler> = [];
   private readonly onServiceMessageHandlers: Array<ServiceMessageHandler> = [];
   private readonly onChannelUserTypingHandlers: Array<ChannelUserTypingHandler> = [];
+  private readonly onDeletedMessagesHandlers: Array<DeletedMessagesHandler> = [];
+  private tdlibUpdates?: TelegramTdlibUpdates;
+  private botAuthToken?: string;
   public me: Api.User;
 
   private static existedBots = {} as { [id: number]: Telegram };
@@ -63,6 +69,7 @@ export default class Telegram {
         networkSocket: env.TG_CONNECTION === 'websocket' ? PromisedWebSockets : PromisedNetSockets,
         connection: env.TG_CONNECTION === 'websocket' ? ConnectionTCPObfuscated : ConnectionTCPFull,
         testServers: env.TG_USE_TEST_DC,
+        receiveUpdates: env.TG_UPDATES_SOURCE === 'gramjs',
       },
     );
     this.client.logger.setLevel(env.TG_LOG_LEVEL as LogLevel);
@@ -70,18 +77,26 @@ export default class Telegram {
 
   public static async create(startArgs: UserAuthParams | BotAuthParams, appName = 'Q2TG') {
     const bot = new this(appName);
+    if ('botAuthToken' in startArgs) {
+      const botAuthToken = startArgs.botAuthToken;
+      if (typeof botAuthToken !== 'string') {
+        throw new Error('TG_UPDATES_SOURCE=tdlib 目前需要字符串形式的 Bot Token');
+      }
+      bot.botAuthToken = botAuthToken;
+    }
     await bot.client.start(startArgs);
     this.existedBots[bot.sessionId] = bot;
     await bot.config();
     return bot;
   }
 
-  public static async connect(sessionId: number, appName = 'Q2TG') {
+  public static async connect(sessionId: number, appName = 'Q2TG', botAuthToken?: string) {
     if (this.existedBots[sessionId]) {
-      // 已经创建过就不会再次创建，可用于两个 instance 共享 user bot
+      // 已经创建过就不会再次创建，可用于多个 instance 复用同一个 Telegram session
       return this.existedBots[sessionId];
     }
     const bot = new this(appName, sessionId);
+    bot.botAuthToken = botAuthToken;
     this.existedBots[sessionId] = bot;
     await bot.client.connect();
     await bot.config();
@@ -91,17 +106,33 @@ export default class Telegram {
   private async config() {
     this.client.setParseMode('html');
     this.waitForMessageHelper = new WaitForMessageHelper(this);
-    this.client.addEventHandler(this.onMessage, new NewMessage({}));
-    this.client.addEventHandler(this.onEditedMessage, new EditedMessage({}));
-    this.client.addEventHandler(this.onServiceMessage, new Raw({
-      types: [Api.UpdateNewMessage],
-      func: (update: Api.UpdateNewMessage) => update.message instanceof Api.MessageService,
-    }));
-    this.client.addEventHandler(this.onChannelUserTyping, new Raw({
-      types: [Api.UpdateChannelUserTyping],
-    }));
-    this.client.addEventHandler(this.callbackQueryHelper.onCallbackQuery, new CallbackQuery());
+    if (env.TG_UPDATES_SOURCE === 'gramjs') {
+      this.client.addEventHandler(this.onMessage, new NewMessage({}));
+      this.client.addEventHandler(this.onEditedMessage, new EditedMessage({}));
+      this.client.addEventHandler(this.onServiceMessage, new Raw({
+        types: [Api.UpdateNewMessage],
+        func: (update: Api.UpdateNewMessage) => update.message instanceof Api.MessageService,
+      }));
+      this.client.addEventHandler(this.onChannelUserTyping, new Raw({
+        types: [Api.UpdateChannelUserTyping],
+      }));
+      this.client.addEventHandler(this.callbackQueryHelper.onCallbackQuery, new CallbackQuery());
+    }
     this.me = await this.client.getMe() as Api.User;
+    if (env.TG_UPDATES_SOURCE === 'tdlib') {
+      if (!this.botAuthToken) {
+        throw new Error('TG_UPDATES_SOURCE=tdlib 需要使用 bot token 创建 Telegram 连接');
+      }
+      this.tdlibUpdates = new TelegramTdlibUpdates(
+        this.sessionId,
+        this.botAuthToken,
+        this.onTdlibMessage,
+        this.onTdlibEditedMessage,
+        this.onTdlibDeletedMessages,
+        this.onTdlibCallbackQuery,
+      );
+      await this.tdlibUpdates.start();
+    }
   }
 
   private onMessage = async (event: NewMessageEvent) => {
@@ -117,6 +148,37 @@ export default class Telegram {
       const res = await handler(event.message);
       if (res) return;
     }
+  };
+
+  private onTdlibMessage = async (chatId: number, messageId: number) => {
+    const messages = await this.client.getMessages(chatId, { ids: messageId });
+    const message = messages[0];
+    if (!message) return;
+    for (const handler of this.onMessageHandlers) {
+      const res = await handler(message);
+      if (res) return;
+    }
+  };
+
+  private onTdlibEditedMessage = async (chatId: number, messageId: number) => {
+    const messages = await this.client.getMessages(chatId, { ids: messageId });
+    const message = messages[0];
+    if (!message) return;
+    for (const handler of this.onEditedMessageHandlers) {
+      const res = await handler(message);
+      if (res) return;
+    }
+  };
+
+  private onTdlibDeletedMessages = async (event: TelegramDeletedMessagesEvent) => {
+    for (const handler of this.onDeletedMessagesHandlers) {
+      const res = await handler(event);
+      if (res) return;
+    }
+  };
+
+  private onTdlibCallbackQuery = async (data: Buffer, answer: () => Promise<void>) => {
+    await this.callbackQueryHelper.onCallbackQueryPayload(data, answer);
   };
 
   private onServiceMessage = async (event: Api.UpdateNewMessage) => {
@@ -177,6 +239,15 @@ export default class Telegram {
     this.client.addEventHandler(handler, new DeletedMessage({}));
   }
 
+  public addDeletedMessagesEventHandler(handler: DeletedMessagesHandler) {
+    this.onDeletedMessagesHandlers.push(handler);
+  }
+
+  public removeDeletedMessagesEventHandler(handler: DeletedMessagesHandler) {
+    this.onDeletedMessagesHandlers.includes(handler) &&
+    this.onDeletedMessagesHandlers.splice(this.onDeletedMessagesHandlers.indexOf(handler), 1);
+  }
+
   public addChannelParticipantEventHandler(handler: (event: Api.UpdateChannelParticipant) => any) {
     this.client.addEventHandler(handler, new Raw({
       types: [Api.UpdateChannelParticipant],
@@ -197,7 +268,7 @@ export default class Telegram {
     );
   }
 
-  public registerCallback(cb: (event: CallbackQueryEvent) => any) {
+  public registerCallback(cb: CallbackQueryHandler) {
     return this.callbackQueryHelper.registerCallback(cb);
   }
 
