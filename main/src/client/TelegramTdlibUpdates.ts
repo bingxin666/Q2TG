@@ -125,6 +125,13 @@ export default class TelegramTdlibUpdates {
     const messageIds = update.message_ids
       .map(tdlibMessageIdToBotApi)
       .filter(Boolean);
+    this.log.debug('收到 TDLib 删除事件', {
+      chatId: update.chat_id,
+      rawMessageIds: update.message_ids,
+      messageIds,
+      isPermanent: update.is_permanent,
+      fromCache: update.from_cache,
+    });
     if (!messageIds.length) return;
     await this.onDeletedMessages({
       chatId: Number(update.chat_id),

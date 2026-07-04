@@ -61,6 +61,12 @@ export default class DeleteMessageService {
     // 删除的时候会返回记录
     if (this.lock(`tg-${pair.tgId}-${messageId}`)) return;
     try {
+      this.log.debug('准备同步 Telegram 删除到 QQ', {
+        tgChatId: pair.tgId,
+        tgMsgId: messageId,
+        instanceId: this.instance.id,
+        qqRoomId: pair.qqRoomId,
+      });
       const messageInfo = await db.message.findFirst({
         where: {
           tgChatId: pair.tgId,
@@ -68,10 +74,24 @@ export default class DeleteMessageService {
           instanceId: this.instance.id,
         },
       });
+      if (!messageInfo) {
+        this.log.debug('未找到 Telegram 消息映射，无法同步删除到 QQ', {
+          tgChatId: pair.tgId,
+          tgMsgId: messageId,
+          instanceId: this.instance.id,
+        });
+      }
       if (messageInfo) {
         try {
           if (this.lock(`qq-${pair.qqRoomId}-${messageInfo.seq}`)) return;
-          if (messageInfo.ignoreDelete) return;
+          if (messageInfo.ignoreDelete) {
+            this.log.debug('消息设置了 ignoreDelete，跳过同步删除', {
+              tgChatId: pair.tgId,
+              tgMsgId: messageId,
+              messageDbId: messageInfo.id,
+            });
+            return;
+          }
           const mapQq = pair.instanceMapForTg[messageInfo.tgSenderId.toString()];
           mapQq && this.recallQqMessage(mapQq, messageInfo.seq, Number(messageInfo.rand), messageInfo.pktnum, pair, false, true);
           // 假如 mapQQ 是普通成员，机器人是管理员，上面撤回失败了也可以由机器人撤回
@@ -93,12 +113,26 @@ export default class DeleteMessageService {
   }
 
   public async handleTelegramDeletedMessages(event: TelegramDeletedMessagesEvent) {
+    this.log.debug('处理 Telegram 删除事件', {
+      chatId: event.chatId,
+      messageIds: event.messageIds,
+      isPermanent: event.isPermanent,
+      fromCache: event.fromCache,
+      instanceId: this.instance.id,
+    });
     if (event.fromCache || !event.isPermanent) {
       this.log.debug('忽略非永久或缓存导致的 Telegram 删除事件', event);
       return;
     }
     const pair = this.instance.forwardPairs.find(event.chatId);
-    if (!pair) return;
+    if (!pair) {
+      this.log.debug('Telegram 删除事件未匹配到转发 Pair', {
+        chatId: event.chatId,
+        messageIds: event.messageIds,
+        instanceId: this.instance.id,
+      });
+      return;
+    }
     for (const messageId of event.messageIds) {
       await this.telegramDeleteMessage(messageId, pair, true);
     }
