@@ -560,7 +560,8 @@ export default class ForwardService {
         message += `\n<b>@${this.tgBot.me.username}</b>`;
       }
 
-      let richHeaderUsed = false;
+      let richHeaderUsed = false,
+        richHeaderPreviewUsed = false;
       if (((pair.flags | this.instance.flags) & flags.DISABLE_RICH_HEADER) || !env.WEB_ENDPOINT) {
         messageHeaderWithLink = messageHeader;
       }
@@ -578,6 +579,7 @@ export default class ForwardService {
         && (isContainAtOrChannelFace || !isContainsUrl(message))) {
         // 没有文件时才能显示链接预览
         richHeaderUsed = true;
+        richHeaderPreviewUsed = true;
         // https://github.com/tdlib/td/blob/437c2d0c6e0ad104022d5ad86ddc8aedc41cb7a8/td/telegram/MessageContent.cpp#L2575
         // https://github.com/tdlib/td/blob/437c2d0c6e0ad104022d5ad86ddc8aedc41cb7a8/td/generate/scheme/telegram_api.tl#L1841
         // https://github.com/gram-js/gramjs/pull/633
@@ -602,7 +604,7 @@ export default class ForwardService {
         }
       }
 
-      if (!richHeaderUsed) {
+      if (!richHeaderUsed || richHeaderPreviewUsed) {
         message = messageHeaderWithLink + (message && messageHeaderWithLink ? '\n' : '') + message;
       }
       message && (messageToSend.message = message);
@@ -620,9 +622,10 @@ export default class ForwardService {
           this.log.warn('Rich Header 发送错误', messageToSend.file, e);
           posthog.capture('Rich Header 发送错误', { error: e, attach: messageToSend.file });
           delete messageToSend.file;
-          delete messageToSend.linkPreview;
-          // 这里可能是因为 url 本身不合法之类的问题，所以这里发送不带链接的 header
-          message = messageHeader + (message && messageHeader ? '\n' : '') + message;
+          messageToSend.linkPreview = false;
+          if (messageHeaderWithLink && message.startsWith(messageHeaderWithLink)) {
+            message = messageHeader + message.substring(messageHeaderWithLink.length);
+          }
           message && (messageToSend.message = message);
           tgMessage = await pair.tg.sendMessage(messageToSend);
         }
