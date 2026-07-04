@@ -605,7 +605,8 @@ export default class ForwardService {
       }
 
       if (!richHeaderUsed || richHeaderPreviewUsed) {
-        message = messageHeaderWithLink + (message && messageHeaderWithLink ? '\n' : '') + message;
+        const fallbackHeader = richHeaderPreviewUsed ? messageHeader : messageHeaderWithLink;
+        message = fallbackHeader + (message && fallbackHeader ? '\n' : '') + message;
       }
       message && (messageToSend.message = message);
 
