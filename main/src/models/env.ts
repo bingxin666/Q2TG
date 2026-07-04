@@ -1,6 +1,9 @@
 import z from 'zod';
 import path from 'path';
 
+const booleanEnv = z.string().transform((v) => ['true', '1', 'yes'].includes(v.toLowerCase()));
+const intEnv = z.string().regex(/^\d+$/).transform(Number);
+
 const configParsed = z.object({
   DATA_DIR: z.string().default(path.resolve('./data')),
   CACHE_DIR: z.string().default(path.join(process.env.DATA_DIR || path.resolve('./data'), 'cache')),
@@ -22,14 +25,19 @@ const configParsed = z.object({
   TG_TDLIB_DATABASE_DIR: z.string().optional(),
   TG_TDLIB_FILES_DIR: z.string().optional(),
   TG_TDLIB_VERBOSITY: z.string().regex(/^\d+$/).transform(Number).default('1'),
-  TG_TDLIB_SKIP_OLD_UPDATES: z.string().transform((v) => ['true', '1', 'yes'].includes(v.toLowerCase())).default('true'),
-  TG_INITIAL_DCID: z.string().regex(/^\d+$/).transform(Number).optional(),
+  TG_TDLIB_SKIP_OLD_UPDATES: booleanEnv.default('true'),
+  TG_DELETE_POLLING: booleanEnv.default('true'),
+  TG_DELETE_POLL_INTERVAL_SECONDS: intEnv.default('60'),
+  TG_DELETE_POLL_WINDOW_SECONDS: intEnv.default('1800'),
+  TG_DELETE_POLL_GRACE_SECONDS: intEnv.default('30'),
+  TG_DELETE_POLL_BATCH_SIZE: intEnv.default('100'),
+  TG_INITIAL_DCID: intEnv.optional(),
   TG_INITIAL_SERVER: z.string().ip().optional(),
-  TG_USE_TEST_DC: z.string().transform((v) => ['true', '1', 'yes'].includes(v.toLowerCase())).default('false'),
-  IPV6: z.string().transform((v) => ['true', '1', 'yes'].includes(v.toLowerCase())).default('false'),
+  TG_USE_TEST_DC: booleanEnv.default('false'),
+  IPV6: booleanEnv.default('false'),
 
   PROXY_IP: z.string().ip().optional(),
-  PROXY_PORT: z.string().regex(/^\d+$/).transform(Number).optional(),
+  PROXY_PORT: intEnv.optional(),
   PROXY_USERNAME: z.string().optional(),
   PROXY_PASSWORD: z.string().optional(),
 
@@ -39,16 +47,16 @@ const configParsed = z.object({
   CRV_VIEWER_APP: z.string().url().startsWith('https://t.me/').optional(),
   CRV_KEY: z.string().optional(),
 
-  DISABLE_FILE_UPLOAD_TIP: z.string().transform((v) => ['true', '1', 'yes'].includes(v.toLowerCase())).default('false'),
+  DISABLE_FILE_UPLOAD_TIP: booleanEnv.default('false'),
   IMAGE_SUMMARY: z.string().optional(),
 
-  LISTEN_PORT: z.string().regex(/^\d+$/).transform(Number).default('8080'),
+  LISTEN_PORT: intEnv.default('8080'),
 
   UI_PATH: z.string().optional(),
   UI_PROXY: z.string().url().optional(),
   WEB_ENDPOINT: z.string().url().optional(),
 
-  POSTHOG_OPTOUT: z.string().transform((v) => ['true', '1', 'yes'].includes(v.toLowerCase())).default('false'),
+  POSTHOG_OPTOUT: booleanEnv.default('false'),
 
   REPO: z.string().default('Local Build'),
   REF: z.string().default('Local Build'),

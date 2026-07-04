@@ -68,6 +68,16 @@ TG_UPDATES_SOURCE=tdlib
 
 该模式只使用 Bot Token 登录 TDLib，不需要手机号或 UserBot。TDLib 入站会接收新消息、编辑消息和删除消息；删除事件会过滤掉缓存删除，只处理永久删除。启用后请避免让同一个 Bot Token 同时被其他 Bot API webhook、getUpdates 或 MTProto 入站消费者接收更新。
 
+Bot Token 模式下 Telegram 不一定会推送普通消息删除事件，因此项目默认启用删除兜底轮询：定期检查近期由 Telegram 转发到 QQ 的消息是否仍存在，若 Telegram 侧已删除，则撤回 QQ 侧对应消息。可通过以下变量调整：
+
+```env
+TG_DELETE_POLLING=true
+TG_DELETE_POLL_INTERVAL_SECONDS=60
+TG_DELETE_POLL_WINDOW_SECONDS=1800
+TG_DELETE_POLL_GRACE_SECONDS=30
+TG_DELETE_POLL_BATCH_SIZE=100
+```
+
 ## 免责声明
 
 一切开发旨在学习，请勿用于非法用途。本项目完全免费开源，不会收取任何费用，无任何担保。请勿将本项目用于商业用途。由于使用本程序造成的任何问题，由使用者自行承担，项目开发者不承担任何责任。

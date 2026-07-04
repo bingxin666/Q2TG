@@ -10,10 +10,16 @@ import flags from '../constants/flags';
 import { MessageRecallEvent, Group, Friend } from '../client/QQClient';
 import posthog from '../models/posthog';
 import { TelegramDeletedMessagesEvent } from '../client/TelegramDeletedMessages';
+import env from '../models/env';
+
+type MappedMessageInfo = Awaited<ReturnType<typeof db.message.findMany>>[number];
 
 export default class DeleteMessageService {
   private readonly log: Logger;
   private readonly lockIds = new Set<string>();
+  private readonly pollingDeletedMessageKeys = new Set<string>();
+  private pollingTimer?: NodeJS.Timeout;
+  private pollingRunning = false;
 
   constructor(private readonly instance: Instance,
               private readonly tgBot: Telegram) {
@@ -27,6 +33,10 @@ export default class DeleteMessageService {
     }
     this.lockIds.add(lockId);
     setTimeout(() => this.lockIds.delete(lockId), 5000);
+  }
+
+  private getPollingKey(pair: Pair, messageId: number) {
+    return `${pair.tgId}:${messageId}`;
   }
 
   // 500ms 内只撤回一条消息，防止频繁导致一部分消息没有成功撤回。不过这样的话，会得不到返回的结果
@@ -51,6 +61,144 @@ export default class DeleteMessageService {
     }
   }, 1000);
 
+  public startTelegramDeleteFallbackPolling() {
+    if (!env.TG_DELETE_POLLING) {
+      this.log.info('Telegram 删除兜底轮询未启用');
+      return;
+    }
+    if (this.pollingTimer) return;
+
+    const intervalMs = Math.max(env.TG_DELETE_POLL_INTERVAL_SECONDS, 10) * 1000;
+    this.log.info('Telegram 删除兜底轮询已启动', {
+      intervalSeconds: Math.round(intervalMs / 1000),
+      windowSeconds: env.TG_DELETE_POLL_WINDOW_SECONDS,
+      graceSeconds: env.TG_DELETE_POLL_GRACE_SECONDS,
+      batchSize: env.TG_DELETE_POLL_BATCH_SIZE,
+    });
+
+    this.pollingTimer = setInterval(() => {
+      this.pollTelegramDeletedMessages()
+        .catch(e => {
+          this.log.error('Telegram 删除兜底轮询失败', e);
+          posthog.capture('Telegram 删除兜底轮询失败', { error: e });
+        });
+    }, intervalMs);
+    this.pollingTimer.unref?.();
+    setTimeout(() => {
+      this.pollTelegramDeletedMessages()
+        .catch(e => {
+          this.log.error('Telegram 删除兜底轮询失败', e);
+          posthog.capture('Telegram 删除兜底轮询失败', { error: e });
+        });
+    }, 0);
+  }
+
+  public stopTelegramDeleteFallbackPolling() {
+    if (!this.pollingTimer) return;
+    clearInterval(this.pollingTimer);
+    this.pollingTimer = undefined;
+  }
+
+  private async pollTelegramDeletedMessages() {
+    if (this.pollingRunning) {
+      this.log.debug('上一次 Telegram 删除兜底轮询尚未结束，跳过本轮');
+      return;
+    }
+    this.pollingRunning = true;
+    try {
+      for (const pair of this.instance.forwardPairs.getAll()) {
+        await this.pollTelegramDeletedMessagesForPair(pair);
+      }
+    }
+    finally {
+      this.pollingRunning = false;
+    }
+  }
+
+  private async pollTelegramDeletedMessagesForPair(pair: Pair) {
+    const now = Math.floor(Date.now() / 1000);
+    const minTime = now - env.TG_DELETE_POLL_WINDOW_SECONDS;
+    const maxTime = now - env.TG_DELETE_POLL_GRACE_SECONDS;
+    if (maxTime < minTime) return;
+
+    let lastId: number | undefined;
+    let checkedCount = 0;
+    let deletedCount = 0;
+    const batchSize = Math.max(env.TG_DELETE_POLL_BATCH_SIZE, 1);
+
+    while (true) {
+      const messages = await db.message.findMany({
+        where: {
+          tgChatId: pair.tgId,
+          instanceId: this.instance.id,
+          ignoreDelete: false,
+          time: {
+            gte: minTime,
+            lte: maxTime,
+          },
+          id: lastId ? { lt: lastId } : undefined,
+          tgSenderId: {
+            not: BigInt(this.tgBot.me.id.toString()),
+          },
+        },
+        orderBy: { id: 'desc' },
+        take: batchSize,
+      });
+      if (!messages.length) break;
+      lastId = messages[messages.length - 1].id;
+
+      const deletedMessageIds = await this.findDeletedTelegramMessageIds(pair, messages);
+      checkedCount += new Set(messages.map(message => message.tgMsgId)).size;
+      deletedCount += deletedMessageIds.length;
+
+      for (const messageId of deletedMessageIds) {
+        const key = this.getPollingKey(pair, messageId);
+        if (this.pollingDeletedMessageKeys.has(key)) continue;
+        this.pollingDeletedMessageKeys.add(key);
+        this.log.info('Telegram 删除兜底轮询发现已删除消息', {
+          tgChatId: pair.tgId,
+          tgMsgId: messageId,
+          instanceId: this.instance.id,
+        });
+        await this.telegramDeleteMessage(messageId, pair, true);
+      }
+
+      if (messages.length < batchSize) break;
+    }
+
+    if (checkedCount) {
+      this.log.debug('Telegram 删除兜底轮询检查完成', {
+        tgChatId: pair.tgId,
+        checkedCount,
+        deletedCount,
+        instanceId: this.instance.id,
+      });
+    }
+  }
+
+  private async findDeletedTelegramMessageIds(pair: Pair, messages: MappedMessageInfo[]) {
+    const messageIds = [...new Set(messages.map(message => message.tgMsgId))];
+    if (!messageIds.length) return [];
+
+    let existingMessages: Array<Api.Message | Api.MessageService | undefined>;
+    try {
+      existingMessages = await this.tgBot.getMessage(pair.tg.entity, { ids: messageIds }) as Array<Api.Message | Api.MessageService | undefined>;
+    }
+    catch (e) {
+      this.log.warn('Telegram 删除兜底轮询查询消息失败', {
+        tgChatId: pair.tgId,
+        messageIds,
+        error: e.message,
+      });
+      return [];
+    }
+
+    const existingMessageIds = new Set(existingMessages
+      .filter((message): message is Api.Message | Api.MessageService => !!message && typeof message.id === 'number')
+      .map(message => message.id));
+    return messageIds.filter(messageId => !existingMessageIds.has(messageId));
+  }
+
   /**
    * 删除 QQ 对应的消息
    * @param messageId
@@ -67,48 +215,52 @@ export default class DeleteMessageService {
         instanceId: this.instance.id,
         qqRoomId: pair.qqRoomId,
       });
-      const messageInfo = await db.message.findFirst({
+      const messageInfos = await db.message.findMany({
         where: {
           tgChatId: pair.tgId,
           tgMsgId: messageId,
           instanceId: this.instance.id,
         },
       });
-      if (!messageInfo) {
+      if (!messageInfos.length) {
         this.log.debug('未找到 Telegram 消息映射，无法同步删除到 QQ', {
           tgChatId: pair.tgId,
           tgMsgId: messageId,
           instanceId: this.instance.id,
         });
       }
-      if (messageInfo) {
-        try {
-          if (this.lock(`qq-${pair.qqRoomId}-${messageInfo.seq}`)) return;
-          if (messageInfo.ignoreDelete) {
-            this.log.debug('消息设置了 ignoreDelete，跳过同步删除', {
-              tgChatId: pair.tgId,
-              tgMsgId: messageId,
-              messageDbId: messageInfo.id,
-            });
-            return;
-          }
-          const mapQq = pair.instanceMapForTg[messageInfo.tgSenderId.toString()];
-          mapQq && this.recallQqMessage(mapQq, messageInfo.seq, Number(messageInfo.rand), messageInfo.pktnum, pair, false, true);
-          // 假如 mapQQ 是普通成员，机器人是管理员，上面撤回失败了也可以由机器人撤回
-          // 所以撤回两次
-          // 不知道哪次会成功，所以就都不发失败提示了
-          this.recallQqMessage(pair.qq, messageInfo.seq, Number(messageInfo.rand),
-            pair.qq.dm ? messageInfo.time : messageInfo.pktnum,
-            pair, isOthersMsg, !!mapQq);
-          // 有 lock 了，这里不需要删除数据库了
-        }
-        catch (e) {
-          this.log.error(e);
-          posthog.capture('telegramDeleteMessage 出错', { error: e });
-        }
+      for (const messageInfo of messageInfos) {
+        await this.recallMappedQqMessage(messageInfo, messageId, pair, isOthersMsg);
       }
     }
     catch (e) {
+    }
+  }
+
+  private async recallMappedQqMessage(messageInfo: MappedMessageInfo, messageId: number, pair: Pair, isOthersMsg: boolean) {
+    try {
+      if (this.lock(`qq-${pair.qqRoomId}-${messageInfo.seq}`)) return;
+      if (messageInfo.ignoreDelete) {
+        this.log.debug('消息设置了 ignoreDelete，跳过同步删除', {
+          tgChatId: pair.tgId,
+          tgMsgId: messageId,
+          messageDbId: messageInfo.id,
+        });
+        return;
+      }
+      const mapQq = messageInfo.tgSenderId && pair.instanceMapForTg[messageInfo.tgSenderId.toString()];
+      mapQq && this.recallQqMessage(mapQq, messageInfo.seq, Number(messageInfo.rand), messageInfo.pktnum, pair, false, true);
+      // 假如 mapQQ 是普通成员，机器人是管理员，上面撤回失败了也可以由机器人撤回
+      // 所以撤回两次
+      // 不知道哪次会成功，所以就都不发失败提示了
+      this.recallQqMessage(pair.qq, messageInfo.seq, Number(messageInfo.rand),
+        pair.qq.dm ? messageInfo.time : messageInfo.pktnum,
+        pair, isOthersMsg, !!mapQq);
+      // 有 lock 了，这里不需要删除数据库了
+    }
+    catch (e) {
+      this.log.error(e);
+      posthog.capture('telegramDeleteMessage 出错', { error: e });
     }
   }
 

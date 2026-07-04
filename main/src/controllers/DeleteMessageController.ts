@@ -16,6 +16,7 @@ export default class DeleteMessageController {
     tgBot.addEditedMessageEventHandler(this.onTelegramEditMessage);
     tgBot.addDeletedMessagesEventHandler(this.onTelegramDeletedMessages);
     oicq.addMessageRecallEventHandler(this.onQqRecall);
+    this.deleteMessageService.startTelegramDeleteFallbackPolling();
   }
 
   private onTelegramMessage = async (message: Api.Message) => {
