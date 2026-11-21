@@ -3,7 +3,7 @@ import path from 'path';
 import * as tdl from 'tdl';
 import { getTdjson } from 'prebuilt-tdlib';
 import env from '../models/env';
-import { tdlibMessageIdToBotApi } from '../utils/tdlibMessageId';
+import { tdlibMessageIdToBotApi, tdlibChatIdToBotApi } from '../utils/tdlibMessageId';
 import { TelegramDeletedMessagesEvent } from './TelegramDeletedMessages';
 
 type TdUpdate = {
@@ -109,15 +109,21 @@ export default class TelegramTdlibUpdates {
     update: TdUpdate,
     handler: (chatId: number, messageId: number) => Promise<void>,
   ) {
-    const chatId = update.message?.chat_id ?? update.chat_id;
+    const rawChatId = update.message?.chat_id ?? update.chat_id;
     const rawMessageId = update.message?.id ?? update.message_id;
-    if (!chatId || !rawMessageId) return;
+    if (!rawChatId || !rawMessageId) return;
     const messageId = tdlibMessageIdToBotApi(rawMessageId);
     if (!messageId) {
       this.log.warn('无法转换 TDLib 消息 ID', rawMessageId, update);
       return;
     }
-    await handler(Number(chatId), messageId);
+    // 同样要做 chat_id 归一化，否则 onTdlibMessage 拿裸 channelId 去 getMessages 会找不到
+    const chatId = tdlibChatIdToBotApi(rawChatId);
+    if (chatId === null) {
+      this.log.warn('无法转换 TDLib chat_id', rawChatId);
+      return;
+    }
+    await handler(chatId, messageId);
   }
 
   private async handleDeleteMessages(update: TdUpdate) {
@@ -133,8 +139,15 @@ export default class TelegramTdlibUpdates {
       fromCache: update.from_cache,
     });
     if (!messageIds.length) return;
+    const chatId = tdlibChatIdToBotApi(update.chat_id);
+    if (chatId === null) {
+      this.log.warn('无法转换 TDLib chat_id', update.chat_id);
+      return;
+    }
     await this.onDeletedMessages({
-      chatId: Number(update.chat_id),
+      // TDLib 的 chat_id 和 GramJS / Pair.tgId 的表示不一致，必须转换，
+      // 否则上层 forwardPairs.find() 匹配不上，删除会被静默丢弃
+      chatId,
       messageIds,
       isPermanent: update.is_permanent ?? true,
       fromCache: update.from_cache ?? false,

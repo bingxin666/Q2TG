@@ -10,6 +10,7 @@ import { CallbackQuery } from 'telegram/events/CallbackQuery';
 import os from 'os';
 import TelegramChat from './TelegramChat';
 import TelegramSession from '../models/TelegramSession';
+import { getLogger, Logger } from 'log4js';
 import { LogLevel } from 'telegram/extensions/Logger';
 import { BigInteger } from 'big-integer';
 import { IterMessagesParams } from 'telegram/client/messages';
@@ -18,6 +19,7 @@ import { ConnectionTCPFull, ConnectionTCPObfuscated } from 'telegram/network';
 import env from '../models/env';
 import TelegramTdlibUpdates from './TelegramTdlibUpdates';
 import { TelegramDeletedMessagesEvent } from './TelegramDeletedMessages';
+import { parseTelegramDeleteUpdate } from './telegramDeleteUpdate';
 
 type MessageHandler = (message: Api.Message) => Promise<boolean | void>;
 type ServiceMessageHandler = (message: Api.MessageService) => Promise<boolean | void>;
@@ -26,6 +28,7 @@ type DeletedMessagesHandler = (event: TelegramDeletedMessagesEvent) => Promise<b
 
 export default class Telegram {
   private readonly client: TelegramClient;
+  private readonly log: Logger;
   private waitForMessageHelper: WaitForMessageHelper;
   private callbackQueryHelper: CallbackQueryHelper = new CallbackQueryHelper();
   private readonly onMessageHandlers: Array<MessageHandler> = [];
@@ -48,6 +51,7 @@ export default class Telegram {
   }
 
   private constructor(appName: string, sessionId?: number) {
+    this.log = getLogger(`Telegram${sessionId === undefined ? '' : ` - ${sessionId}`}`);
     this.client = new TelegramClient(
       new TelegramSession(sessionId),
       env.TG_API_ID,
@@ -116,6 +120,12 @@ export default class Telegram {
       this.client.addEventHandler(this.onChannelUserTyping, new Raw({
         types: [Api.UpdateChannelUserTyping],
       }));
+      // Bot Token 走 MTProto 登录时，只要 Bot 是群管理员，Telegram 就会直接把
+      // updateDeleteMessages / updateDeleteChannelMessages 推过来。
+      // 这是延迟最低的删除来源，不需要 UserBot，也不依赖 60 秒兜底轮询。
+      this.client.addEventHandler(this.onRawDeletedMessages, new Raw({
+        types: [Api.UpdateDeleteMessages, Api.UpdateDeleteChannelMessages],
+      }));
       this.client.addEventHandler(this.callbackQueryHelper.onCallbackQuery, new CallbackQuery());
     }
     this.me = await this.client.getMe() as Api.User;
@@ -168,6 +178,21 @@ export default class Telegram {
       const res = await handler(message);
       if (res) return;
     }
+  };
+
+  /**
+   * 处理 MTProto 原始删除更新（gramjs 更新源）。
+   * 解析逻辑放在 telegramDeleteUpdate.ts 里，方便离线单测。
+   */
+  private onRawDeletedMessages = async (update: Api.TypeUpdate) => {
+    const event = parseTelegramDeleteUpdate(update);
+    if (!event) return;
+    this.log.debug('收到 MTProto 删除更新', {
+      chatId: event.chatId,
+      messageIds: event.messageIds,
+      source: 'gramjs',
+    });
+    await this.onTdlibDeletedMessages(event);
   };
 
   private onTdlibDeletedMessages = async (event: TelegramDeletedMessagesEvent) => {

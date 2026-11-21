@@ -31,6 +31,15 @@ const configParsed = z.object({
   TG_DELETE_POLL_WINDOW_SECONDS: intEnv.default('1800'),
   TG_DELETE_POLL_GRACE_SECONDS: intEnv.default('30'),
   TG_DELETE_POLL_BATCH_SIZE: intEnv.default('100'),
+  /**
+   * 兜底轮询是否检查「由 Bot 自己发出」的消息。
+   *
+   * 这类消息正是 QQ -> TG 方向转发过去的，在 TG 侧被删除时也应该撤回 QQ 侧。
+   * 默认关闭以保持原有行为：打开后会覆盖更多消息，同时也会把
+   * 「QQ 侧撤回 -> 我们在 TG 删除 -> 又看到这次删除」这种回环带进来，
+   * 需要把 TG_DELETE_POLL_GRACE_SECONDS 调大到覆盖回环时间。
+   */
+  TG_DELETE_POLL_INCLUDE_BOT_MESSAGES: booleanEnv.default('false'),
   TG_INITIAL_DCID: intEnv.optional(),
   TG_INITIAL_SERVER: z.string().ip().optional(),
   TG_USE_TEST_DC: booleanEnv.default('false'),

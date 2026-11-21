@@ -68,7 +68,23 @@ TG_UPDATES_SOURCE=tdlib
 
 该模式只使用 Bot Token 登录 TDLib，不需要手机号或 UserBot。TDLib 入站会接收新消息、编辑消息和删除消息；删除事件会过滤掉缓存删除，只处理永久删除。启用后请避免让同一个 Bot Token 同时被其他 Bot API webhook、getUpdates 或 MTProto 入站消费者接收更新。
 
-Bot Token 模式下 Telegram 不一定会推送普通消息删除事件，因此项目默认启用删除兜底轮询：定期检查近期由 Telegram 转发到 QQ 的消息是否仍存在，若 Telegram 侧已删除，则撤回 QQ 侧对应消息。可通过以下变量调整：
+> 注意：HTTP Bot API（`api.telegram.org`）**没有**普通群/超级群消息被删除的通知。
+> 截至 Bot API 10.4，唯一的删除推送 `deleted_business_messages` 只对商业账号有效。
+> 因此本项目的删除同步不依赖 Bot API，而是走下面两条路径。
+
+### 实时删除（推荐路径）
+
+两种入站源都会把 MTProto 的 `updateDeleteMessages` / `updateDeleteChannelMessages` 直接接进来，
+**Bot 是群管理员时即可收到，延迟为秒级**：
+
+- **超级群 / 频道**：`updateDeleteChannelMessages` 带 `channelId`，能直接定位转发对
+- **普通群 / 私聊**：`updateDeleteMessages` 只有 message id（协议本身不告诉你在哪个会话），
+  项目会按数据库中记录的 `tgMsgId → tgChatId` 反查归属
+
+### 删除兜底轮询
+
+Bot Token 模式下删除推送并不保证 100% 送达（断线重连期间、Bot 非管理员、普通群消息未缓存等），
+因此项目仍保留兜底轮询，作为实时路径的补充而非主力：
 
 ```env
 TG_DELETE_POLLING=true
@@ -76,7 +92,11 @@ TG_DELETE_POLL_INTERVAL_SECONDS=60
 TG_DELETE_POLL_WINDOW_SECONDS=1800
 TG_DELETE_POLL_GRACE_SECONDS=30
 TG_DELETE_POLL_BATCH_SIZE=100
+# 是否把 QQ -> TG 方向（发送者是 Bot 自己）的消息也纳入轮询
+TG_DELETE_POLL_INCLUDE_BOT_MESSAGES=false
 ```
+
+实时推送与轮询可能同时发现同一条删除，项目内部做了去重，不会重复撤回 QQ 消息。
 
 ## 免责声明
 

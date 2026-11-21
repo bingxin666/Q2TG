@@ -17,7 +17,15 @@ type MappedMessageInfo = Awaited<ReturnType<typeof db.message.findMany>>[number]
 export default class DeleteMessageService {
   private readonly log: Logger;
   private readonly lockIds = new Set<string>();
-  private readonly pollingDeletedMessageKeys = new Set<string>();
+  /**
+   * 已经处理过的删除，key 为 `${tgId}:${messageId}`，value 是处理时间。
+   *
+   * 同一条消息可能被多条路径同时发现：MTProto 实时推送、兜底轮询、以及 QQ->TG
+   * 方向被删除后的回环。`lock()` 只有 5 秒，而轮询的 grace 是 30 秒，
+   * 挡不住「推送处理完 30 秒后轮询又发现一次」的情况，所以这里用更长的 TTL 去重，
+   * 避免 QQ 侧收到两次撤回。
+   */
+  private readonly handledDeleteKeys = new Map<string, number>();
   private pollingTimer?: NodeJS.Timeout;
   private pollingRunning = false;
 
@@ -35,8 +43,47 @@ export default class DeleteMessageService {
     setTimeout(() => this.lockIds.delete(lockId), 5000);
   }
 
-  private getPollingKey(pair: Pair, messageId: number) {
-    return `${pair.tgId}:${messageId}`;
+  private getDeleteKey(tgId: number | null, messageId: number) {
+    return `${tgId ?? 'unknown'}:${messageId}`;
+  }
+
+  /**
+   * 判断这条删除是否已经处理过（只读，不写标记）。
+   * 必须在真正撤回成功之后再调用 {@link markDeleteHandled}，
+   * 否则撤回失败的消息会被永久跳过，兜底轮询也没机会重试。
+   */
+  private isDeleteAlreadyHandled(key: string, ttlMs = 10 * 60 * 1000) {
+    const at = this.handledDeleteKeys.get(key);
+    if (at !== undefined && Date.now() - at <= ttlMs) {
+      this.log.debug('该 Telegram 删除已处理过，跳过', { key });
+      return true;
+    }
+    return false;
+  }
+
+  /** 撤回成功后才记录，避免失败的消息被去重挡掉重试机会 */
+  private markDeleteHandled(key: string, ttlMs = 10 * 60 * 1000) {
+    const now = Date.now();
+    // 顺手清理过期条目，避免长期运行后 Map 无限增长
+    if (this.handledDeleteKeys.size > 5000) {
+      for (const [k, at] of this.handledDeleteKeys) {
+        if (now - at > ttlMs) this.handledDeleteKeys.delete(k);
+      }
+    }
+    this.handledDeleteKeys.set(key, now);
+  }
+
+  /**
+   * 统一的删除入口：先查去重，执行撤回，再记录。
+   *
+   * 实时推送、兜底轮询、无 chatId 反查三条路径都走这里，
+   * 保证同一条消息只会撤回一次 QQ 消息。
+   */
+  private async processTelegramDelete(messageId: number, pair: Pair, isOthersMsg = true) {
+    const key = this.getDeleteKey(pair.tgId, messageId);
+    if (this.isDeleteAlreadyHandled(key)) return;
+    await this.telegramDeleteMessage(messageId, pair, isOthersMsg);
+    this.markDeleteHandled(key);
   }
 
   // 500ms 内只撤回一条消息，防止频繁导致一部分消息没有成功撤回。不过这样的话，会得不到返回的结果
@@ -74,6 +121,9 @@ export default class DeleteMessageService {
       windowSeconds: env.TG_DELETE_POLL_WINDOW_SECONDS,
       graceSeconds: env.TG_DELETE_POLL_GRACE_SECONDS,
       batchSize: env.TG_DELETE_POLL_BATCH_SIZE,
+      includeBotMessages: env.TG_DELETE_POLL_INCLUDE_BOT_MESSAGES,
+      // 实时推送已经能覆盖大部分场景，轮询只是兜底（断线、非管理员、普通群缓存失效等）
+      note: '实时删除来自 MTProto updateDeleteMessages / updateDeleteChannelMessages',
     });
 
     this.pollingTimer = setInterval(() => {
@@ -137,9 +187,14 @@ export default class DeleteMessageService {
             lte: maxTime,
           },
           id: lastId ? { lt: lastId } : undefined,
-          tgSenderId: {
-            not: BigInt(this.tgBot.me.id.toString()),
-          },
+          // 默认只检查「别人发的」消息。打开 TG_DELETE_POLL_INCLUDE_BOT_MESSAGES
+          // 之后才把 QQ -> TG 方向（发送者是 Bot 自己）的消息也纳入，
+          // 这些消息在 TG 侧被删时同样需要撤回 QQ。
+          ...(env.TG_DELETE_POLL_INCLUDE_BOT_MESSAGES ? {} : {
+            tgSenderId: {
+              not: BigInt(this.tgBot.me.id.toString()),
+            },
+          }),
         },
         orderBy: { id: 'desc' },
         take: batchSize,
@@ -152,15 +207,13 @@ export default class DeleteMessageService {
       deletedCount += deletedMessageIds.length;
 
       for (const messageId of deletedMessageIds) {
-        const key = this.getPollingKey(pair, messageId);
-        if (this.pollingDeletedMessageKeys.has(key)) continue;
-        this.pollingDeletedMessageKeys.add(key);
         this.log.info('Telegram 删除兜底轮询发现已删除消息', {
           tgChatId: pair.tgId,
           tgMsgId: messageId,
           instanceId: this.instance.id,
         });
-        await this.telegramDeleteMessage(messageId, pair, true);
+        // 实时推送可能已经处理过这条删除，processTelegramDelete 内部会去重
+        await this.processTelegramDelete(messageId, pair, true);
       }
 
       if (messages.length < batchSize) break;
@@ -276,17 +329,60 @@ export default class DeleteMessageService {
       this.log.debug('忽略非永久或缓存导致的 Telegram 删除事件', event);
       return;
     }
-    const pair = this.instance.forwardPairs.find(event.chatId);
-    if (!pair) {
-      this.log.debug('Telegram 删除事件未匹配到转发 Pair', {
-        chatId: event.chatId,
-        messageIds: event.messageIds,
+
+    // 更新里带了 chat id（超级群 updateDeleteChannelMessages / TDLib）：直接定位转发对
+    if (event.chatId !== null && event.chatId !== undefined) {
+      const pair = this.instance.forwardPairs.find(event.chatId);
+      if (!pair) {
+        this.log.debug('Telegram 删除事件未匹配到转发 Pair', {
+          chatId: event.chatId,
+          messageIds: event.messageIds,
+          instanceId: this.instance.id,
+        });
+        return;
+      }
+      for (const messageId of event.messageIds) {
+        await this.processTelegramDelete(messageId, pair, true);
+      }
+      return;
+    }
+
+    // 更新里没带 chat id（普通群/私聊的 updateDeleteMessages）：按库里记录的 tgMsgId 反查
+    await this.dispatchDeleteWithoutChatId(event.messageIds);
+  }
+
+  /**
+   * MTProto 的 `updateDeleteMessages` 只给 message id，协议层面不告诉你是哪个会话。
+   * 这里用数据库里 tgMsgId → tgChatId 的唯一映射反查归属，
+   * 同一个 message id 理论上可能出现在多个会话，所以逐个会话分别处理。
+   */
+  private async dispatchDeleteWithoutChatId(messageIds: number[]) {
+    const infos = await db.message.findMany({
+      where: {
+        instanceId: this.instance.id,
+        tgMsgId: { in: messageIds },
+      },
+      select: { tgMsgId: true, tgChatId: true },
+    });
+    if (!infos.length) {
+      this.log.debug('Telegram 删除事件（无 chatId）未找到对应的消息记录', {
+        messageIds,
         instanceId: this.instance.id,
       });
       return;
     }
-    for (const messageId of event.messageIds) {
-      await this.telegramDeleteMessage(messageId, pair, true);
+    const grouped = new Map<number, Set<number>>();
+    for (const info of infos) {
+      const chatId = Number(info.tgChatId);
+      if (!grouped.has(chatId)) grouped.set(chatId, new Set());
+      grouped.get(chatId).add(info.tgMsgId);
+    }
+    for (const [chatId, ids] of grouped) {
+      const pair = this.instance.forwardPairs.find(chatId);
+      if (!pair) continue;
+      for (const messageId of ids) {
+        await this.processTelegramDelete(messageId, pair, true);
+      }
     }
   }
 

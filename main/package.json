@@ -5,7 +5,8 @@
     "build": "tsc && tsx build.ts",
     "start": "prisma db push --accept-data-loss --skip-generate && node --enable-source-maps build/index.js",
     "prisma": "prisma",
-    "import": "ts-node tools/import"
+    "import": "ts-node tools/import",
+    "test:tg-delete": "node --experimental-strip-types src/client/telegramDeleteUpdate.test.mts && node --experimental-strip-types src/client/telegramDeleteWiring.test.mts"
   },
   "bin": "build/index.js",
   "files": [
